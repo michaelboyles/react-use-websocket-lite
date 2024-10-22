@@ -14,7 +14,6 @@ export const SOCKET_IO_PATH = '/socket.io/?EIO=3&transport=websocket';
 export const SOCKET_IO_PING_CODE = '2';
 export const DEFAULT_RECONNECT_LIMIT = 20;
 export const DEFAULT_RECONNECT_INTERVAL_MS = 5000;
-export const UNPARSABLE_JSON_OBJECT = {};
 export const DEFAULT_HEARTBEAT = {
   message: 'ping',
   timeout: 60000,

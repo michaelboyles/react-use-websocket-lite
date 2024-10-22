@@ -11,14 +11,12 @@ import { Options, SendMessage, WebSocketLike } from './types';
 import { assertIsWebSocket } from './util';
 
 export interface Setters {
-  setLastMessage: (message: WebSocketEventMap['message']) => void;
   setReadyState: (readyState: ReadyState) => void;
 }
 
 const bindMessageHandler = (
   webSocketInstance: WebSocketLike,
   optionsRef: MutableRefObject<Options>,
-  setLastMessage: Setters['setLastMessage'],
 ) => {
   let heartbeatCb: () => void;
 
@@ -33,17 +31,6 @@ const bindMessageHandler = (
   webSocketInstance.onmessage = (message: WebSocketEventMap['message']) => {
     heartbeatCb?.();
     optionsRef.current.onMessage && optionsRef.current.onMessage(message);
-    if (typeof optionsRef.current.filter === 'function' && optionsRef.current.filter(message) !== true) {
-      return;
-    }
-    if (
-      optionsRef.current.heartbeat &&
-      typeof optionsRef.current.heartbeat !== "boolean" &&
-      optionsRef.current.heartbeat?.returnMessage === message.data
-    )
-      return;
-
-    setLastMessage(message);
   };
 };
 
@@ -119,7 +106,7 @@ const bindErrorHandler = (
       setReadyState(ReadyState.CLOSED);
       webSocketInstance.close();
     }
-    
+
     if (optionsRef.current.retryOnError) {
       if (reconnectCount.current < (optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT)) {
         const nextReconnectInterval = typeof optionsRef.current.reconnectInterval === 'function' ?
@@ -148,7 +135,7 @@ export const attachListeners = (
     reconnectCount: MutableRefObject<number>,
     sendMessage: SendMessage,
   ): (() => void) => {
-  const { setLastMessage, setReadyState } = setters;
+  const { setReadyState } = setters;
 
   let interval: number;
   let cancelReconnectOnClose: () => void;
@@ -161,7 +148,6 @@ export const attachListeners = (
   bindMessageHandler(
     webSocketInstance,
     optionsRef,
-    setLastMessage,
   );
 
   bindOpenHandler(

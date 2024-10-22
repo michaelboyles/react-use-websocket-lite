@@ -44,7 +44,6 @@ export const createOrJoinSocket = (
   url: string,
   setReadyState: (readyState: ReadyState) => void,
   optionsRef: MutableRefObject<Options>,
-  setLastMessage: (message: WebSocketEventMap['message']) => void,
   startRef: MutableRefObject<() => void>,
   reconnectCount: MutableRefObject<number>,
   sendMessage: SendMessage,
@@ -77,13 +76,12 @@ export const createOrJoinSocket = (
     }
 
     const subscriber: Subscriber = {
-      setLastMessage,
       setReadyState,
       optionsRef,
       reconnectCount,
       reconnect: startRef,
     };
-  
+
     addSubscriber(url, subscriber);
 
     return cleanSubscribers(
@@ -105,7 +103,6 @@ export const createOrJoinSocket = (
     return attachListeners(
       webSocketRef.current,
       {
-        setLastMessage,
         setReadyState
       },
       optionsRef,

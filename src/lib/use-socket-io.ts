@@ -40,7 +40,7 @@ export const useSocketIO = <T = unknown>(
   url: string | (() => string | Promise<string>) | null,
   options: Options = DEFAULT_OPTIONS,
   connect: boolean = true,
-): WebSocketHook<SocketIOMessageData<T | null>, SocketIOMessageData<T | null>> => {
+): WebSocketHook => {
   const optionsWithSocketIO = useMemo(() => ({
     ...options,
     fromSocketIO: true,
@@ -49,7 +49,6 @@ export const useSocketIO = <T = unknown>(
   const {
     sendMessage,
     sendJsonMessage,
-    lastMessage,
     readyState,
     getWebSocket,
   } = useWebSocket(
@@ -59,14 +58,9 @@ export const useSocketIO = <T = unknown>(
     connect,
   );
 
-  const socketIOLastMessage = useMemo(() =>
-    getSocketData<T>(lastMessage), [lastMessage]);
-
   return {
     sendMessage,
     sendJsonMessage,
-    lastMessage: socketIOLastMessage,
-    lastJsonMessage: socketIOLastMessage,
     readyState,
     getWebSocket,
   };
