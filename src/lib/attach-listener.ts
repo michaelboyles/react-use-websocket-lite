@@ -3,11 +3,9 @@ import { heartbeat } from './heartbeat';
 import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT } from './constants';
 import { Options, ReadyState } from './types';
 
-type SetReadyState = (readyState: ReadyState) => void;
-
 export function attachListeners(
     websocket: WebSocket,
-    setReadyState: SetReadyState,
+    setReadyState: (readyState: ReadyState) => void,
     optionsRef: MutableRefObject<Options>,
     reconnect: () => void,
     reconnectCount: MutableRefObject<number>
