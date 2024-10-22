@@ -14,11 +14,11 @@ import {
 } from './types';
 import { assertIsWebSocket } from './util';
 
-export const useWebSocket = (
+export function useWebSocket(
     url: string | (() => string | Promise<string>) | null,
     options: Options = DEFAULT_OPTIONS,
     connect: boolean = true,
-): WebSocketHook => {
+): WebSocketHook {
     const [readyState, setReadyState] = useState<ReadyStateState>({});
     const convertedUrl = useRef<string | null>(null);
     const webSocketRef = useRef<WebSocket | null>(null);
@@ -140,4 +140,4 @@ export const useWebSocket = (
         readyState: readyStateFromUrl,
         getWebSocket,
     };
-};
+}

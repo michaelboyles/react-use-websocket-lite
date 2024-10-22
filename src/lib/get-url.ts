@@ -2,11 +2,11 @@ import { MutableRefObject } from 'react';
 import { Options, QueryParams } from './types';
 import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT } from './constants';
 
-export const getUrl = async (
+export async function getUrl(
     url: string | (() => string | Promise<string>),
     optionsRef: MutableRefObject<Options>,
     retriedAttempts: number = 0,
-): Promise<string | null> => {
+): Promise<string | null> {
     let convertedUrl: string;
 
     if (typeof url === 'function') {
@@ -42,7 +42,7 @@ export const getUrl = async (
         return convertedUrl;
     }
     return appendQueryParams(convertedUrl, optionsRef.current.queryParams);
-};
+}
 
 function appendQueryParams(url: string, params: QueryParams): string {
     const hasParamsRegex = /\?(\w+=\w+)/;
