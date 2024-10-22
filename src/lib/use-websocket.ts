@@ -23,7 +23,6 @@ export function useWebSocket(
     const startRef = useRef<() => void>(() => void 0);
     const reconnectCount = useRef<number>(0);
     const messageQueue = useRef<WebSocketMessage[]>([]);
-    const webSocketProxy = useRef<WebSocket | null>(null);
     const optionsCache = useRef<Options>(options);
     optionsCache.current = options;
 
@@ -91,7 +90,6 @@ export function useWebSocket(
 
             startRef.current = () => {
                 if (!expectClose) {
-                    if (webSocketProxy.current) webSocketProxy.current = null;
                     removeListeners?.();
                     start();
                 }
@@ -101,7 +99,6 @@ export function useWebSocket(
             return () => {
                 expectClose = true;
                 createOrJoin = false;
-                if (webSocketProxy.current) webSocketProxy.current = null;
                 removeListeners?.();
             };
         }
