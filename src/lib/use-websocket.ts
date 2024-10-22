@@ -51,7 +51,7 @@ export function useWebSocket(
             let createOrJoin = true;
 
             const start = async () => {
-                convertedUrl.current = await getUrl(url, optionsCache.current);
+                convertedUrl.current = typeof url === "string" ? url : await getUrl(url, optionsCache.current);
 
                 if (convertedUrl.current === null) {
                     console.error('Failed to get a valid URL. WebSocket connection aborted.');
@@ -124,36 +124,33 @@ export function useWebSocket(
 }
 
 async function getUrl(
-    url: string | (() => (string | Promise<string>)),
+    url: () => (string | Promise<string>),
     options: Readonly<Options>,
     retriedAttempts: number = 0,
 ): Promise<string | null> {
-    if (typeof url === 'function') {
-        try {
-            return await url();
-        }
-        catch (e) {
-            if (options.retryOnError) {
-                const reconnectLimit = options.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
-                if (retriedAttempts < reconnectLimit) {
-                    const nextReconnectInterval = typeof options.reconnectInterval === 'function' ?
-                        options.reconnectInterval(retriedAttempts) :
-                        options.reconnectInterval;
+    try {
+        return await url();
+    }
+    catch (e) {
+        if (options.retryOnError) {
+            const reconnectLimit = options.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
+            if (retriedAttempts < reconnectLimit) {
+                const nextReconnectInterval = typeof options.reconnectInterval === 'function' ?
+                    options.reconnectInterval(retriedAttempts) :
+                    options.reconnectInterval;
 
-                    await waitFor(nextReconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS);
-                    return getUrl(url, options, retriedAttempts + 1);
-                }
-                else {
-                    options.onReconnectStop?.(retriedAttempts);
-                    return null;
-                }
+                await waitFor(nextReconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS);
+                return getUrl(url, options, retriedAttempts + 1);
             }
             else {
+                options.onReconnectStop?.(retriedAttempts);
                 return null;
             }
         }
+        else {
+            return null;
+        }
     }
-    return url;
 }
 
 function waitFor(duration: number) {
