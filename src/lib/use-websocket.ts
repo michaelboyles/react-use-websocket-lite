@@ -45,7 +45,8 @@ export function useWebSocket(
     }, []);
 
     useEffect(() => {
-        if (url !== null && connect) {
+        if (!connect) return;
+        if (url !== null) {
             let removeListeners: (() => void) | undefined;
             let expectOpen = true;
 
@@ -99,7 +100,7 @@ export function useWebSocket(
                 removeListeners?.();
             };
         }
-        else if (url === null || connect) {
+        else {
             reconnectCount.current = 0;
             setReadyState(prev => {
                 if (convertedUrl.current && prev[convertedUrl.current] !== "closed") {
