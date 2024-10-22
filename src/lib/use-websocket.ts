@@ -45,8 +45,6 @@ export function useWebSocket(
         }
     }, []);
 
-    const queryString = options.queryParams ? JSON.stringify(options.queryParams) : null;
-
     useEffect(() => {
         if (url !== null && connect) {
             let removeListeners: () => void;
@@ -109,7 +107,7 @@ export function useWebSocket(
                 ...(convertedUrl.current && {[convertedUrl.current]: "closed"}),
             }));
         }
-    }, [url, connect, queryString, sendMessage]);
+    }, [url, connect, sendMessage]);
 
     // Drain the queue on connect
     useEffect(() => {

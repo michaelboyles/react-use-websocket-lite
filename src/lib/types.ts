@@ -1,13 +1,8 @@
 import { MutableRefObject } from 'react';
 import { ReadyState } from './constants';
 
-export interface QueryParams {
-    [key: string]: string | number
-}
-
 export interface Options {
     url: string | null | (() => (string | Promise<string>))
-    queryParams?: QueryParams
     protocols?: string | string[]
     share?: boolean
     onOpen?: (event: WebSocketEventMap['open']) => void

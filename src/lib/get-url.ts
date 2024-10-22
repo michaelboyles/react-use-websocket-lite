@@ -1,4 +1,4 @@
-import { Options, QueryParams } from './types';
+import { Options } from './types';
 import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT } from './constants';
 
 export async function getUrl(
@@ -6,11 +6,9 @@ export async function getUrl(
     options: Readonly<Options>,
     retriedAttempts: number = 0,
 ): Promise<string | null> {
-    let convertedUrl: string;
-
     if (typeof url === 'function') {
         try {
-            convertedUrl = await url();
+            return await url();
         }
         catch (e) {
             if (options.retryOnError) {
@@ -33,25 +31,7 @@ export async function getUrl(
             }
         }
     }
-    else {
-        convertedUrl = url;
-    }
-
-    if (!options.queryParams) {
-        return convertedUrl;
-    }
-    return appendQueryParams(convertedUrl, options.queryParams);
-}
-
-function appendQueryParams(url: string, params: QueryParams): string {
-    const hasParamsRegex = /\?(\w+=\w+)/;
-    const alreadyHasParams = hasParamsRegex.test(url);
-
-    const stringified = `${Object.entries(params).reduce((next, [key, value]) => {
-        return next + `${key}=${value}&`;
-    }, '').slice(0, -1)}`;
-
-    return `${url}${alreadyHasParams ? '&' : '?'}${stringified}`;
+    return url;
 }
 
 function waitFor(duration: number) {
