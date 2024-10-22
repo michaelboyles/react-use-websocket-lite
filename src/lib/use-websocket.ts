@@ -28,12 +28,15 @@ export function useWebSocket(
     const optionsCache = useRef<Options>(options);
     optionsCache.current = options;
 
-    const readyStateFromUrl: ReadyState =
-        convertedUrl.current && readyState[convertedUrl.current] !== undefined ?
-            readyState[convertedUrl.current] :
-            url !== null && connect === true ?
-                ReadyState.CONNECTING :
-                ReadyState.UNINSTANTIATED;
+    const readyStateFromUrl: ReadyState = function() {
+        if (convertedUrl.current && readyState[convertedUrl.current] !== undefined) {
+            return readyState[convertedUrl.current];
+        }
+        if (url !== null && connect === true) {
+            return ReadyState.CONNECTING;
+        }
+        return ReadyState.UNINSTANTIATED;
+    }();
 
     const stringifiedQueryParams = options.queryParams ? JSON.stringify(options.queryParams) : null;
 
