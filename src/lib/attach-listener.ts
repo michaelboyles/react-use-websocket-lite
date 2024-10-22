@@ -115,7 +115,6 @@ export function attachListeners(
 ): () => void {
     const {setReadyState} = setters;
 
-    let interval: number;
     let cancelReconnectOnClose: () => void;
     let cancelReconnectOnError: () => void;
 
@@ -151,6 +150,5 @@ export function attachListeners(
         cancelReconnectOnClose();
         cancelReconnectOnError();
         webSocketInstance.close();
-        if (interval) clearInterval(interval);
     };
 }
