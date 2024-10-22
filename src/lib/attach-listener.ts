@@ -30,15 +30,15 @@ export function attachListeners(
 }
 
 function bindMessageHandler(websocket: WebSocket, optionsRef: MutableRefObject<Options>) {
-    let heartbeatCb: () => void;
+    let markMessageReceived: () => void = () => {};
 
     const heartbeatOpts = optionsRef.current.heartbeat;
     if (heartbeatOpts) {
         const heartbeatOptions = typeof heartbeatOpts === "boolean" ? undefined : heartbeatOpts;
-        heartbeatCb = heartbeat(websocket, heartbeatOptions);
+        markMessageReceived = heartbeat(websocket, heartbeatOptions);
     }
     websocket.onmessage = message => {
-        heartbeatCb?.();
+        markMessageReceived();
         optionsRef.current.onMessage?.(message);
     };
 }
