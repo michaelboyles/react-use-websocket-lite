@@ -10,7 +10,7 @@ import { Options } from './types';
 type SetReadyState = (readyState: ReadyState) => void;
 
 export function attachListeners(
-    webSocketInstance: WebSocket,
+    websocket: WebSocket,
     setReadyState: SetReadyState,
     optionsRef: MutableRefObject<Options>,
     reconnect: () => void,
@@ -20,19 +20,19 @@ export function attachListeners(
     let cancelReconnectOnError: () => void;
 
     bindMessageHandler(
-        webSocketInstance,
+        websocket,
         optionsRef,
     );
 
     bindOpenHandler(
-        webSocketInstance,
+        websocket,
         optionsRef,
         setReadyState,
         reconnectCount,
     );
 
     cancelReconnectOnClose = bindCloseHandler(
-        webSocketInstance,
+        websocket,
         optionsRef,
         setReadyState,
         reconnect,
@@ -40,7 +40,7 @@ export function attachListeners(
     );
 
     cancelReconnectOnError = bindErrorHandler(
-        webSocketInstance,
+        websocket,
         optionsRef,
         reconnect,
         reconnectCount,
@@ -50,7 +50,7 @@ export function attachListeners(
         setReadyState(ReadyState.CLOSING);
         cancelReconnectOnClose();
         cancelReconnectOnError();
-        webSocketInstance.close();
+        websocket.close();
     };
 }
 
@@ -72,12 +72,12 @@ function bindMessageHandler(websocket: WebSocket, optionsRef: MutableRefObject<O
 }
 
 function bindOpenHandler(
-    webSocketInstance: WebSocket,
+    websocket: WebSocket,
     optionsRef: MutableRefObject<Options>,
     setReadyState: SetReadyState,
     reconnectCount: MutableRefObject<number>,
 ) {
-    webSocketInstance.onopen = (event: WebSocketEventMap['open']) => {
+    websocket.onopen = (event: WebSocketEventMap['open']) => {
         optionsRef.current.onOpen && optionsRef.current.onOpen(event);
         reconnectCount.current = 0;
         setReadyState(ReadyState.OPEN);
@@ -85,7 +85,7 @@ function bindOpenHandler(
 }
 
 function bindCloseHandler(
-    webSocketInstance: WebSocket,
+    websocket: WebSocket,
     optionsRef: MutableRefObject<Options>,
     setReadyState: SetReadyState,
     reconnect: () => void,
@@ -93,7 +93,7 @@ function bindCloseHandler(
 ) {
     let reconnectTimeout: number;
 
-    webSocketInstance.onclose = (event: WebSocketEventMap['close']) => {
+    websocket.onclose = (event: WebSocketEventMap['close']) => {
         optionsRef.current.onClose && optionsRef.current.onClose(event);
         setReadyState(ReadyState.CLOSED);
         if (optionsRef.current.shouldReconnect && optionsRef.current.shouldReconnect(event)) {
@@ -117,14 +117,14 @@ function bindCloseHandler(
 }
 
 function bindErrorHandler(
-    webSocketInstance: WebSocket,
+    websocket: WebSocket,
     optionsRef: MutableRefObject<Options>,
     reconnect: () => void,
     reconnectCount: MutableRefObject<number>,
 ) {
     let reconnectTimeout: number;
 
-    webSocketInstance.onerror = (error: WebSocketEventMap['error']) => {
+    websocket.onerror = (error: WebSocketEventMap['error']) => {
         optionsRef.current.onError && optionsRef.current.onError(error);
 
         if (optionsRef.current.retryOnError) {
