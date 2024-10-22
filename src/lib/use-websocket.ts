@@ -47,8 +47,7 @@ export function useWebSocket(
     useEffect(() => {
         if (url !== null && connect) {
             let removeListeners: (() => void) | undefined;
-            let expectClose = false;
-            let createOrJoin = true;
+            let expectOpen = true;
 
             const start = async () => {
                 convertedUrl.current = typeof url === "string" ? url : await getUrl(url, optionsCache.current);
@@ -65,7 +64,7 @@ export function useWebSocket(
                 }
 
                 const protectedSetReadyState = (state: ReadyState) => {
-                    if (!expectClose) {
+                    if (expectOpen) {
                         flushSync(() => setReadyState(prev => ({
                             ...prev,
                             ...(convertedUrl.current && {[convertedUrl.current]: state}),
@@ -73,7 +72,7 @@ export function useWebSocket(
                     }
                 };
 
-                if (createOrJoin) {
+                if (expectOpen) {
                     removeListeners = createOrJoinSocket(
                         webSocketRef,
                         convertedUrl.current,
@@ -86,7 +85,7 @@ export function useWebSocket(
             };
 
             startRef.current = () => {
-                if (!expectClose) {
+                if (expectOpen) {
                     removeListeners?.();
                     start();
                 }
@@ -94,8 +93,7 @@ export function useWebSocket(
 
             start();
             return () => {
-                expectClose = true;
-                createOrJoin = false;
+                expectOpen = false;
                 removeListeners?.();
             };
         }
