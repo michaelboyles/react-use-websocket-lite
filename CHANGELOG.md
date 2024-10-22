@@ -8,8 +8,8 @@ Changes to the object returned from `useWebSocket`
 - Removed `sendJsonMessage`. Just call `sendMessage(JSON.stringify(message))`
 - Changed `ReadyState` to a string union. Better for debugging, console log, etc.
 - Moved `heartbeat.timeout` from to top level. Now named `messageTimeout`
-  - It was always orthognal to heartbeating. You can have a timeout without sending heartbeats, and you can send heartbeats without
-  a timeout
+  - It was always orthogonal to heartbeating; you could have a timeout without sending heartbeats, and send heartbeats without
+  a timeout (and you still can)
 
 Changes to `options`
 
