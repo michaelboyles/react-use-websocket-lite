@@ -1,9 +1,8 @@
-import {
-    DEFAULT_HEARTBEAT_INTERVAL,
-    DEFAULT_HEARTBEAT_MESSAGE,
-    DEFAULT_HEARTBEAT_TIMEOUT
-} from "./constants";
 import { HeartbeatOptions } from "./types";
+
+export const DEFAULT_HEARTBEAT_INTERVAL = 25_000;
+export const DEFAULT_HEARTBEAT_TIMEOUT = 60_000;
+export const DEFAULT_HEARTBEAT_MESSAGE = "ping";
 
 export function heartbeat(ws: WebSocket, options?: HeartbeatOptions): () => void {
     const interval = options?.interval ?? DEFAULT_HEARTBEAT_INTERVAL;
