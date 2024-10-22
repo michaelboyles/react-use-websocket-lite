@@ -17,8 +17,7 @@ export function attachListeners(
     reconnectCount: MutableRefObject<number>
 ): () => void {
     bindMessageHandler(websocket, optionsRef);
-    bindOpenHandler(websocket, optionsRef, setReadyState, reconnectCount);
-    const cancelReconnectOnClose = bindCloseHandler(websocket, optionsRef, setReadyState, reconnect, reconnectCount);
+    const cancelReconnectOnClose = bindOpenAndCloseHandler(websocket, optionsRef, setReadyState, reconnect, reconnectCount);
     const cancelReconnectOnError = bindErrorHandler(websocket, optionsRef, reconnect, reconnectCount);
 
     return () => {
@@ -43,20 +42,7 @@ function bindMessageHandler(websocket: WebSocket, optionsRef: MutableRefObject<O
     };
 }
 
-function bindOpenHandler(
-    websocket: WebSocket,
-    optionsRef: MutableRefObject<Options>,
-    setReadyState: SetReadyState,
-    reconnectCount: MutableRefObject<number>,
-) {
-    websocket.onopen = event => {
-        optionsRef.current.onOpen?.(event);
-        reconnectCount.current = 0;
-        setReadyState("open");
-    };
-}
-
-function bindCloseHandler(
+function bindOpenAndCloseHandler(
     websocket: WebSocket,
     optionsRef: MutableRefObject<Options>,
     setReadyState: SetReadyState,
@@ -65,15 +51,25 @@ function bindCloseHandler(
 ) {
     let reconnectTimeout: number | undefined;
 
-    websocket.onclose = event => {
-        optionsRef.current.onClose?.(event);
-        setReadyState("closed");
-        if (optionsRef.current.shouldReconnect?.(event)) {
-            reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef.current, reconnectCount.current, () => {
-                reconnectCount.current++;
-                reconnect();
-            });
-        }
+    websocket.onopen = event => {
+        optionsRef.current.onOpen?.(event);
+        reconnectCount.current = 0;
+        setReadyState("open");
+
+        websocket.onopen = event => {
+            optionsRef.current.onOpen?.(event);
+            reconnectCount.current = 0;
+
+            websocket.onclose = event => {
+                optionsRef.current.onClose?.(event);
+                if (optionsRef.current.shouldReconnect?.(event)) {
+                    reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef.current, reconnectCount.current, () => {
+                        reconnectCount.current++;
+                        reconnect();
+                    });
+                }
+            };
+        };
     };
     return () => reconnectTimeout && window.clearTimeout(reconnectTimeout);
 }
