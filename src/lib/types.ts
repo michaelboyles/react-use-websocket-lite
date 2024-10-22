@@ -35,7 +35,7 @@ export interface Options {
 
 export type HeartbeatOptions = {
     // The message to send after every `interval`
-    message?: "ping" | "pong" | string | (() => string)
+    message?: string | (() => string)
     // The interval between outgoing messages, in milliseconds
     interval?: number
 };
