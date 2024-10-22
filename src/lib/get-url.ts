@@ -2,7 +2,7 @@ import { Options, QueryParams } from './types';
 import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT } from './constants';
 
 export async function getUrl(
-    url: string | (() => string | Promise<string>),
+    url: string | (() => (string | Promise<string>)),
     options: Readonly<Options>,
     retriedAttempts: number = 0,
 ): Promise<string | null> {
