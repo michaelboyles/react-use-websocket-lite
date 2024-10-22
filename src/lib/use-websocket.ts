@@ -5,7 +5,6 @@ import { createOrJoinSocket } from './create-or-join';
 import {
     Options,
     ReadyState,
-    ReadyStateState,
     SendMessage,
     WebSocketMessage,
     WebSocketHook,
@@ -16,7 +15,7 @@ export function useWebSocket(
     options: Options,
     connect: boolean = true,
 ): WebSocketHook {
-    const [readyState, setReadyState] = useState<ReadyStateState>({});
+    const [readyState, setReadyState] = useState<Record<string, ReadyState>>({});
     const convertedUrl = useRef<string | null>(null);
     const webSocketRef = useRef<WebSocket | null>(null);
     const startRef = useRef<() => void>(() => void 0);
