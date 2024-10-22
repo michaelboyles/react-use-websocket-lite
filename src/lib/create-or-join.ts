@@ -3,7 +3,6 @@ import { sharedWebSockets } from './globals';
 import { Options, Subscriber } from './types';
 import { ReadyState } from './constants';
 import { attachListeners } from './attach-listener';
-import { attachSharedListeners } from './attach-shared-listeners';
 import { addSubscriber, removeSubscriber, hasSubscribers } from './manage-subscribers';
 
 //TODO ensure that all onClose callbacks are called
@@ -12,8 +11,7 @@ function cleanSubscribers(
     url: string,
     subscriber: Subscriber,
     optionsRef: MutableRefObject<Options>,
-    setReadyState: (readyState: ReadyState) => void,
-    clearSocketIoPingInterval: (() => void) | null,
+    setReadyState: (readyState: ReadyState) => void
 ) {
     return () => {
         removeSubscriber(url, subscriber);
@@ -32,7 +30,6 @@ function cleanSubscribers(
             } catch (e) {
 
             }
-            if (clearSocketIoPingInterval) clearSocketIoPingInterval();
 
             delete sharedWebSockets[url];
         }
@@ -48,16 +45,10 @@ export function createOrJoinSocket(
     reconnectCount: MutableRefObject<number>,
 ): () => void {
     if (optionsRef.current.share) {
-        let clearSocketIoPingInterval: ((() => void) | null) = null;
         if (sharedWebSockets[url] === undefined) {
             sharedWebSockets[url] = new WebSocket(url, optionsRef.current.protocols);
             webSocketRef.current = sharedWebSockets[url];
             setReadyState(ReadyState.CONNECTING);
-            clearSocketIoPingInterval = attachSharedListeners(
-                sharedWebSockets[url],
-                url,
-                optionsRef,
-            );
         }
         else {
             webSocketRef.current = sharedWebSockets[url];
@@ -78,7 +69,6 @@ export function createOrJoinSocket(
             subscriber,
             optionsRef,
             setReadyState,
-            clearSocketIoPingInterval,
         );
     }
     else {
