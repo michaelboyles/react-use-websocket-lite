@@ -47,7 +47,7 @@ export function attachListeners(
     );
 
     return () => {
-        setReadyState(ReadyState.CLOSING);
+        setReadyState("closing");
         cancelReconnectOnClose();
         cancelReconnectOnError();
         websocket.close();
@@ -77,10 +77,10 @@ function bindOpenHandler(
     setReadyState: SetReadyState,
     reconnectCount: MutableRefObject<number>,
 ) {
-    websocket.onopen = (event: WebSocketEventMap['open']) => {
-        optionsRef.current.onOpen && optionsRef.current.onOpen(event);
+    websocket.onopen = event => {
+        optionsRef.current.onOpen?.(event);
         reconnectCount.current = 0;
-        setReadyState(ReadyState.OPEN);
+        setReadyState("open");
     };
 }
 
@@ -95,7 +95,7 @@ function bindCloseHandler(
 
     websocket.onclose = (event: WebSocketEventMap['close']) => {
         optionsRef.current.onClose && optionsRef.current.onClose(event);
-        setReadyState(ReadyState.CLOSED);
+        setReadyState("closed");
         if (optionsRef.current.shouldReconnect && optionsRef.current.shouldReconnect(event)) {
             const reconnectAttempts = optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
             if (reconnectCount.current < reconnectAttempts) {
@@ -124,8 +124,8 @@ function bindErrorHandler(
 ) {
     let reconnectTimeout: number;
 
-    websocket.onerror = (error: WebSocketEventMap['error']) => {
-        optionsRef.current.onError && optionsRef.current.onError(error);
+    websocket.onerror = error => {
+        optionsRef.current.onError?.(error);
 
         if (optionsRef.current.retryOnError) {
             if (reconnectCount.current < (optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT)) {

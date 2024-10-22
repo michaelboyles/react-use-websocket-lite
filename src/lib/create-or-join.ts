@@ -4,6 +4,7 @@ import { Options, Subscriber } from './types';
 import { ReadyState } from './constants';
 import { attachListeners } from './attach-listener';
 import { addSubscriber, removeSubscriber, hasSubscribers } from './manage-subscribers';
+import { mapReadyState } from "./util";
 
 //TODO ensure that all onClose callbacks are called
 
@@ -19,11 +20,11 @@ export function createOrJoinSocket(
         if (sharedWebSockets[url] === undefined) {
             sharedWebSockets[url] = new WebSocket(url, optionsRef.current.protocols);
             webSocketRef.current = sharedWebSockets[url];
-            setReadyState(ReadyState.CONNECTING);
+            setReadyState("connecting");
         }
         else {
             webSocketRef.current = sharedWebSockets[url];
-            setReadyState(sharedWebSockets[url].readyState);
+            setReadyState(mapReadyState(sharedWebSockets[url].readyState));
         }
 
         const subscriber: Subscriber = {
@@ -45,7 +46,7 @@ export function createOrJoinSocket(
     else {
         const websocket = new WebSocket(url, optionsRef.current.protocols);
         webSocketRef.current = websocket;
-        setReadyState(ReadyState.CONNECTING);
+        setReadyState("connecting");
 
         return attachListeners(
             websocket,
@@ -71,7 +72,7 @@ function cleanSubscribers(
                 const websocket = sharedWebSockets[url];
                 websocket.onclose = event => {
                     optionsRef.current.onClose?.(event);
-                    setReadyState(ReadyState.CLOSED);
+                    setReadyState("closed");
                 };
                 websocket.close();
             }

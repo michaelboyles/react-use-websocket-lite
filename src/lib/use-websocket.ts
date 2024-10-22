@@ -10,6 +10,7 @@ import {
     WebSocketMessage,
     WebSocketHook,
 } from './types';
+import { mapReadyState } from "./util";
 
 export function useWebSocket(
     url: string | (() => string | Promise<string>) | null,
@@ -31,13 +32,13 @@ export function useWebSocket(
             return readyState[convertedUrl.current];
         }
         if (url !== null && connect) {
-            return ReadyState.CONNECTING;
+            return "connecting";
         }
-        return ReadyState.UNINSTANTIATED;
+        return "uninstantiated";
     }();
 
     const sendMessage: SendMessage = useCallback((message, queueable = true) => {
-        if (webSocketRef.current?.readyState === ReadyState.OPEN) {
+        if (webSocketRef.current?.readyState && mapReadyState(webSocketRef.current.readyState) === "open") {
             webSocketRef.current.send(message);
         }
         else if (queueable) {
@@ -61,7 +62,7 @@ export function useWebSocket(
                     convertedUrl.current = 'ABORTED';
                     flushSync(() => setReadyState(prev => ({
                         ...prev,
-                        ABORTED: ReadyState.CLOSED,
+                        ABORTED: "closed",
                     })));
 
                     return;
@@ -108,14 +109,14 @@ export function useWebSocket(
             reconnectCount.current = 0;
             setReadyState(prev => ({
                 ...prev,
-                ...(convertedUrl.current && {[convertedUrl.current]: ReadyState.CLOSED}),
+                ...(convertedUrl.current && {[convertedUrl.current]: "closed"}),
             }));
         }
     }, [url, connect, queryString, sendMessage]);
 
     // Drain the queue on connect
     useEffect(() => {
-        if (readyStateFromUrl === ReadyState.OPEN) {
+        if (readyStateFromUrl === "open") {
             messageQueue.current.splice(0).forEach(message => {
                 sendMessage(message);
             });
