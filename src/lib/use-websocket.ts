@@ -91,7 +91,7 @@ export function useWebSocket(
                 }
             };
 
-            start();
+            setTimeout(async () => await start(), 0);
             return () => {
                 expectOpen = false;
                 removeListeners?.();
