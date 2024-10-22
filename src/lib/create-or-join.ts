@@ -46,9 +46,6 @@ export function createOrJoinSocket(
         const websocket = new WebSocket(url, optionsRef.current.protocols);
         webSocketRef.current = websocket;
         setReadyState(ReadyState.CONNECTING);
-        if (!websocket) {
-            throw new Error('WebSocket failed to be created');
-        }
 
         return attachListeners(
             websocket,
