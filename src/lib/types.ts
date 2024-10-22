@@ -16,7 +16,6 @@ export interface Options {
 
 export type HeartbeatOptions = {
     message?: "ping" | "pong" | string | (() => string)
-    returnMessage?: "ping" | "pong" | string
     timeout?: number
     interval?: number
 };
