@@ -7,35 +7,6 @@ import { addSubscriber, removeSubscriber, hasSubscribers } from './manage-subscr
 
 //TODO ensure that all onClose callbacks are called
 
-function cleanSubscribers(
-    url: string,
-    subscriber: Subscriber,
-    optionsRef: MutableRefObject<Options>,
-    setReadyState: (readyState: ReadyState) => void
-) {
-    return () => {
-        removeSubscriber(url, subscriber);
-        if (!hasSubscribers(url)) {
-            try {
-                const socketLike = sharedWebSockets[url];
-                if (socketLike instanceof WebSocket) {
-                    socketLike.onclose = (event: WebSocketEventMap['close']) => {
-                        if (optionsRef.current.onClose) {
-                            optionsRef.current.onClose(event);
-                        }
-                        setReadyState(ReadyState.CLOSED);
-                    };
-                }
-                socketLike.close();
-            } catch (e) {
-
-            }
-
-            delete sharedWebSockets[url];
-        }
-    }
-}
-
 export function createOrJoinSocket(
     webSocketRef: MutableRefObject<WebSocket | null>,
     url: string,
@@ -85,5 +56,35 @@ export function createOrJoinSocket(
             startRef.current,
             reconnectCount,
         );
+    }
+}
+
+
+function cleanSubscribers(
+    url: string,
+    subscriber: Subscriber,
+    optionsRef: MutableRefObject<Options>,
+    setReadyState: (readyState: ReadyState) => void
+) {
+    return () => {
+        removeSubscriber(url, subscriber);
+        if (!hasSubscribers(url)) {
+            try {
+                const socketLike = sharedWebSockets[url];
+                if (socketLike instanceof WebSocket) {
+                    socketLike.onclose = (event: WebSocketEventMap['close']) => {
+                        if (optionsRef.current.onClose) {
+                            optionsRef.current.onClose(event);
+                        }
+                        setReadyState(ReadyState.CLOSED);
+                    };
+                }
+                socketLike.close();
+            } catch (e) {
+
+            }
+
+            delete sharedWebSockets[url];
+        }
     }
 }

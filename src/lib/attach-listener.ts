@@ -10,6 +10,51 @@ import { assertIsWebSocket } from './util';
 
 type SetReadyState = (readyState: ReadyState) => void;
 
+export function attachListeners(
+    webSocketInstance: WebSocket,
+    setReadyState: SetReadyState,
+    optionsRef: MutableRefObject<Options>,
+    reconnect: () => void,
+    reconnectCount: MutableRefObject<number>
+): () => void {
+    let cancelReconnectOnClose: () => void;
+    let cancelReconnectOnError: () => void;
+
+    bindMessageHandler(
+        webSocketInstance,
+        optionsRef,
+    );
+
+    bindOpenHandler(
+        webSocketInstance,
+        optionsRef,
+        setReadyState,
+        reconnectCount,
+    );
+
+    cancelReconnectOnClose = bindCloseHandler(
+        webSocketInstance,
+        optionsRef,
+        setReadyState,
+        reconnect,
+        reconnectCount,
+    );
+
+    cancelReconnectOnError = bindErrorHandler(
+        webSocketInstance,
+        optionsRef,
+        reconnect,
+        reconnectCount,
+    );
+
+    return () => {
+        setReadyState(ReadyState.CLOSING);
+        cancelReconnectOnClose();
+        cancelReconnectOnError();
+        webSocketInstance.close();
+    };
+}
+
 function bindMessageHandler(websocket: WebSocket, optionsRef: MutableRefObject<Options>) {
     let heartbeatCb: () => void;
 
@@ -102,49 +147,4 @@ function bindErrorHandler(
         }
     };
     return () => reconnectTimeout && window.clearTimeout(reconnectTimeout);
-}
-
-export function attachListeners(
-    webSocketInstance: WebSocket,
-    setReadyState: SetReadyState,
-    optionsRef: MutableRefObject<Options>,
-    reconnect: () => void,
-    reconnectCount: MutableRefObject<number>
-): () => void {
-    let cancelReconnectOnClose: () => void;
-    let cancelReconnectOnError: () => void;
-
-    bindMessageHandler(
-        webSocketInstance,
-        optionsRef,
-    );
-
-    bindOpenHandler(
-        webSocketInstance,
-        optionsRef,
-        setReadyState,
-        reconnectCount,
-    );
-
-    cancelReconnectOnClose = bindCloseHandler(
-        webSocketInstance,
-        optionsRef,
-        setReadyState,
-        reconnect,
-        reconnectCount,
-    );
-
-    cancelReconnectOnError = bindErrorHandler(
-        webSocketInstance,
-        optionsRef,
-        reconnect,
-        reconnectCount,
-    );
-
-    return () => {
-        setReadyState(ReadyState.CLOSING);
-        cancelReconnectOnClose();
-        cancelReconnectOnError();
-        webSocketInstance.close();
-    };
 }

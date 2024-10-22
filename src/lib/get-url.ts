@@ -2,10 +2,6 @@ import { MutableRefObject } from 'react';
 import { Options, QueryParams } from './types';
 import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT } from './constants';
 
-function waitFor(duration: number) {
-    return new Promise(resolve => window.setTimeout(resolve, duration));
-}
-
 export const getUrl = async (
     url: string | (() => string | Promise<string>),
     optionsRef: MutableRefObject<Options>,
@@ -57,4 +53,8 @@ function appendQueryParams(url: string, params: QueryParams): string {
     }, '').slice(0, -1)}`;
 
     return `${url}${alreadyHasParams ? '&' : '?'}${stringified}`;
+}
+
+function waitFor(duration: number) {
+    return new Promise(resolve => window.setTimeout(resolve, duration));
 }
