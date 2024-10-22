@@ -97,7 +97,7 @@ function startTimeout(websocket: WebSocket, timeout: number) {
     }
     let taskId = resetTimeout();
 
-    websocket.addEventListener("close", () => clearInterval(taskId));
+    websocket.addEventListener("close", () => clearTimeout(taskId));
     return () => {
         clearTimeout(taskId);
         taskId = resetTimeout();
