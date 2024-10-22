@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { flushSync } from 'react-dom';
-import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT, ReadyState } from './constants';
+import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT } from './constants';
 import { createOrJoinSocket } from './create-or-join';
 import {
     Options,
+    ReadyState,
     ReadyStateState,
     SendMessage,
     WebSocketMessage,

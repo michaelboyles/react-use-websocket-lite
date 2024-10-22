@@ -1,11 +1,7 @@
 import { MutableRefObject } from 'react';
 import { heartbeat } from './heartbeat';
-import {
-    DEFAULT_RECONNECT_LIMIT,
-    DEFAULT_RECONNECT_INTERVAL_MS,
-    ReadyState,
-} from './constants';
-import { Options } from './types';
+import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT } from './constants';
+import { Options, ReadyState } from './types';
 
 type SetReadyState = (readyState: ReadyState) => void;
 

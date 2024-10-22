@@ -1,5 +1,3 @@
-import { ReadyState } from './constants';
-
 export interface Options {
     url: string | null | (() => (string | Promise<string>))
     protocols?: string | string[]
@@ -22,6 +20,8 @@ export type HeartbeatOptions = {
     timeout?: number
     interval?: number
 };
+
+export type ReadyState = "uninstantiated" | "connecting" | "open" | "closing" | "closed";
 
 export type ReadyStateState = {
     [url: string]: ReadyState

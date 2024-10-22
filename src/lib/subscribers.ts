@@ -1,5 +1,4 @@
-import { Options } from "./types";
-import { ReadyState } from "./constants";
+import { Options, ReadyState } from "./types";
 import { MutableRefObject } from "react";
 
 export type Subscriber = {

@@ -1,7 +1,6 @@
 import { MutableRefObject } from 'react';
 import { sharedWebSockets } from './globals';
-import { Options } from './types';
-import { ReadyState } from './constants';
+import { Options, ReadyState } from './types';
 import { attachListeners } from './attach-listener';
 import { addSubscriber, removeSubscriber, hasSubscribers, Subscriber } from './subscribers';
 import { mapReadyState } from "./util";
