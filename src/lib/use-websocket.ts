@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT } from './constants';
-import { createOrJoinSocket } from './create-or-join';
 import {
     Options,
     ReadyState,
@@ -10,6 +9,7 @@ import {
     WebSocketHook,
 } from './types';
 import { mapReadyState } from "./util";
+import { attachListeners } from "./attach-listener";
 
 export function useWebSocket(
     options: Options,
@@ -64,25 +64,23 @@ export function useWebSocket(
                     return;
                 }
 
-                const protectedSetReadyState = (state: ReadyState) => {
-                    if (expectOpen) {
-                        flushSync(() => setReadyState(prev => {
-                            if (activeUrl.current && prev[activeUrl.current] !== state) {
-                                return { ...prev, [activeUrl.current]: state };
-                            }
-                            return prev;
-                        }));
-                    }
-                };
-
                 if (expectOpen) {
-                    removeListeners = createOrJoinSocket(
-                        webSocketRef,
-                        activeUrl.current,
-                        protectedSetReadyState,
-                        activeOptions,
-                        startRef,
-                        reconnectCount,
+                    const protectedSetReadyState = (state: ReadyState) => {
+                        if (expectOpen) {
+                            flushSync(() => setReadyState(prev => {
+                                if (activeUrl.current && prev[activeUrl.current] !== state) {
+                                    return { ...prev, [activeUrl.current]: state };
+                                }
+                                return prev;
+                            }));
+                        }
+                    };
+
+                    const websocket = new WebSocket(activeUrl.current, activeOptions.current.protocols);
+                    webSocketRef.current = websocket;
+                    protectedSetReadyState("connecting");
+                    return attachListeners(
+                        websocket, protectedSetReadyState, activeOptions, startRef.current, reconnectCount
                     );
                 }
             };

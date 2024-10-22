@@ -1,11 +1,4 @@
-import { resetWebSockets } from './globals';
-import { resetSubscribers } from './subscribers';
 import { ReadyState } from "./types";
-
-export function resetGlobalState(url?: string): void {
-    resetSubscribers(url);
-    resetWebSockets(url);
-}
 
 export function mapReadyState(state: number): ReadyState {
     switch (state) {

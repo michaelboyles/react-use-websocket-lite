@@ -6,9 +6,6 @@ export interface Options {
     // See https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#protocols
     // Default: undefined
     protocols?: string | string[]
-    // Whether to share the WebSocket, so that different calls to useWebSocket will share a single WebSocket instance
-    // Default: false
-    share?: boolean
     // Callback invoked when the WebSocket opens
     // See https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/open_event
     onOpen?(event: WebSocketEventMap['open']): void
