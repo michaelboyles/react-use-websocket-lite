@@ -30,6 +30,7 @@ export interface Options {
     // Options
     // Default: false, i.e. no heartbeat behaviour
     heartbeat?: boolean | HeartbeatOptions
+    connect?: boolean
 }
 
 export type HeartbeatOptions = {

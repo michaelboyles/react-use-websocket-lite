@@ -10,10 +10,7 @@ import {
 } from './types';
 import { attachListeners } from "./listen";
 
-export function useWebSocket(
-    options: Options,
-    connect: boolean = true,
-): WebSocketHook {
+export function useWebSocket(options: Options): WebSocketHook {
     const [readyState, setReadyState] = useState<Record<string, ReadyState>>({});
     const activeUrl = useRef<string | null>(null);
     const webSocketRef = useRef<WebSocket | null>(null);
@@ -22,6 +19,7 @@ export function useWebSocket(
     const messageQueue = useRef<WebSocketMessage[]>([]);
     const activeOptions = useRef<Options>(options);
     const url = options.url;
+    const connect = options.connect;
     activeOptions.current = options;
 
     const readyStateForUrl: ReadyState = function() {
