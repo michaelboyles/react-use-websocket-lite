@@ -65,10 +65,12 @@ export function useWebSocket(
 
                 const protectedSetReadyState = (state: ReadyState) => {
                     if (expectOpen) {
-                        flushSync(() => setReadyState(prev => ({
-                            ...prev,
-                            ...(convertedUrl.current && {[convertedUrl.current]: state}),
-                        })));
+                        flushSync(() => setReadyState(prev => {
+                            if (convertedUrl.current && prev[convertedUrl.current] !== state) {
+                                return { ...prev, [convertedUrl.current]: state };
+                            }
+                            return prev;
+                        }));
                     }
                 };
 
@@ -99,10 +101,12 @@ export function useWebSocket(
         }
         else if (url === null || connect) {
             reconnectCount.current = 0;
-            setReadyState(prev => ({
-                ...prev,
-                ...(convertedUrl.current && {[convertedUrl.current]: "closed"}),
-            }));
+            setReadyState(prev => {
+                if (convertedUrl.current && prev[convertedUrl.current] !== "closed") {
+                    return { ...prev, [convertedUrl.current]: "closed" }
+                }
+                return prev;
+            });
         }
     }, [url, connect, sendMessage]);
 
