@@ -2,36 +2,36 @@ import { MutableRefObject } from 'react';
 import { ReadyState } from './constants';
 
 export interface QueryParams {
-  [key: string]: string | number;
+    [key: string]: string | number
 }
 
 export interface Options {
-  queryParams?: QueryParams;
-  protocols?: string | string[];
-  share?: boolean;
-  onOpen?: (event: WebSocketEventMap['open']) => void;
-  onClose?: (event: WebSocketEventMap['close']) => void;
-  onMessage?: (event: WebSocketEventMap['message']) => void;
-  onError?: (event: WebSocketEventMap['error']) => void;
-  onReconnectStop?: (numAttempts: number) => void;
-  shouldReconnect?: (event: WebSocketEventMap['close']) => boolean;
-  reconnectInterval?: number | ((lastAttemptNumber: number) => number);
-  reconnectAttempts?: number;
-  filter?: (message: WebSocketEventMap['message']) => boolean;
-  retryOnError?: boolean;
-  skipAssert?: boolean;
-  heartbeat?: boolean | HeartbeatOptions;
+    queryParams?: QueryParams
+    protocols?: string | string[]
+    share?: boolean
+    onOpen?: (event: WebSocketEventMap['open']) => void
+    onClose?: (event: WebSocketEventMap['close']) => void
+    onMessage?: (event: WebSocketEventMap['message']) => void
+    onError?: (event: WebSocketEventMap['error']) => void
+    onReconnectStop?: (numAttempts: number) => void
+    shouldReconnect?: (event: WebSocketEventMap['close']) => boolean
+    reconnectInterval?: number | ((lastAttemptNumber: number) => number)
+    reconnectAttempts?: number
+    filter?: (message: WebSocketEventMap['message']) => boolean
+    retryOnError?: boolean
+    skipAssert?: boolean
+    heartbeat?: boolean | HeartbeatOptions
 }
 
 export type HeartbeatOptions = {
-  message?: "ping" | "pong" | string | (() => string);
-  returnMessage?: "ping" | "pong" | string;
-  timeout?: number;
-  interval?: number;
+    message?: "ping" | "pong" | string | (() => string)
+    returnMessage?: "ping" | "pong" | string
+    timeout?: number
+    interval?: number
 };
 
 export type ReadyStateState = {
-  [url: string]: ReadyState,
+    [url: string]: ReadyState
 }
 
 export type WebSocketMessage = string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView;
@@ -40,15 +40,15 @@ export type SendMessage = (message: WebSocketMessage, keep?: boolean) => void;
 export type SendJsonMessage = <T = unknown>(jsonMessage: T, keep?: boolean) => void;
 
 export type Subscriber = {
-  setReadyState: (readyState: ReadyState) => void,
-  optionsRef: MutableRefObject<Options>,
-  reconnectCount: MutableRefObject<number>,
-  reconnect: MutableRefObject<() => void>,
+    setReadyState: (readyState: ReadyState) => void
+    optionsRef: MutableRefObject<Options>
+    reconnectCount: MutableRefObject<number>
+    reconnect: MutableRefObject<() => void>
 }
 
 export type WebSocketHook = {
-  sendMessage: SendMessage,
-  sendJsonMessage: SendJsonMessage,
-  readyState: ReadyState,
-  getWebSocket: () => (WebSocket | null),
+    sendMessage: SendMessage
+    sendJsonMessage: SendJsonMessage
+    readyState: ReadyState
+    getWebSocket: () => (WebSocket | null)
 }

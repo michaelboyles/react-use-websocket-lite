@@ -1,10 +1,7 @@
 import { resetWebSockets } from './globals';
 import { resetSubscribers } from './manage-subscribers';
 
-export function assertIsWebSocket(
-    webSocketInstance: WebSocket,
-    skip?: boolean,
-): asserts webSocketInstance is WebSocket {
+export function assertIsWebSocket(webSocketInstance: WebSocket, skip?: boolean): asserts webSocketInstance is WebSocket {
     if (!skip && webSocketInstance instanceof WebSocket === false) throw new Error('');
 }
 
