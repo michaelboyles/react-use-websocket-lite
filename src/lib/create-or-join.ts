@@ -1,9 +1,9 @@
 import { MutableRefObject } from 'react';
 import { sharedWebSockets } from './globals';
-import { Options, Subscriber } from './types';
+import { Options } from './types';
 import { ReadyState } from './constants';
 import { attachListeners } from './attach-listener';
-import { addSubscriber, removeSubscriber, hasSubscribers } from './manage-subscribers';
+import { addSubscriber, removeSubscriber, hasSubscribers, Subscriber } from './subscribers';
 import { mapReadyState } from "./util";
 
 //TODO ensure that all onClose callbacks are called

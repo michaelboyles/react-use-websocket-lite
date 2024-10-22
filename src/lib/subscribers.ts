@@ -1,4 +1,13 @@
-import { Subscriber } from './types';
+import { Options } from "./types";
+import { ReadyState } from "./constants";
+import { MutableRefObject } from "react";
+
+export type Subscriber = {
+    setReadyState(readyState: ReadyState): void
+    optionsRef: MutableRefObject<Options>
+    reconnectCount: MutableRefObject<number>
+    reconnect: MutableRefObject<() => void>
+}
 
 export type Subscribers = {
     [url: string]: Set<Subscriber>,

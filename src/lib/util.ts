@@ -1,5 +1,5 @@
 import { resetWebSockets } from './globals';
-import { resetSubscribers } from './manage-subscribers';
+import { resetSubscribers } from './subscribers';
 import { ReadyState } from "./constants";
 
 export function resetGlobalState(url?: string): void {
