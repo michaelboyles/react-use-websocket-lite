@@ -1,12 +1,12 @@
 import { sharedWebSockets } from './globals';
-import { DEFAULT_RECONNECT_LIMIT, DEFAULT_RECONNECT_INTERVAL_MS, ReadyState, isEventSourceSupported } from './constants';
+import { DEFAULT_RECONNECT_LIMIT, DEFAULT_RECONNECT_INTERVAL_MS, ReadyState } from './constants';
 import { getSubscribers } from './manage-subscribers';
 import { MutableRefObject } from 'react';
-import { HeartbeatOptions, Options, WebSocketLike } from './types';
+import { HeartbeatOptions, Options } from './types';
 import { heartbeat } from './heartbeat';
 
 const bindMessageHandler = (
-  webSocketInstance: WebSocketLike,
+  webSocketInstance: WebSocket,
   url: string,
   heartbeatOptions?: boolean | HeartbeatOptions
 ) => {
@@ -27,7 +27,7 @@ const bindMessageHandler = (
 };
 
 const bindOpenHandler = (
-  webSocketInstance: WebSocketLike,
+  webSocketInstance: WebSocket,
   url: string,
 ) => {
   webSocketInstance.onopen = (event: WebSocketEventMap['open']) => {
@@ -43,7 +43,7 @@ const bindOpenHandler = (
 };
 
 const bindCloseHandler = (
-  webSocketInstance: WebSocketLike,
+  webSocketInstance: WebSocket,
   url: string,
 ) => {
   if (webSocketInstance instanceof WebSocket) {
@@ -84,7 +84,7 @@ const bindCloseHandler = (
 };
 
 const bindErrorHandler = (
-  webSocketInstance: WebSocketLike,
+  webSocketInstance: WebSocket,
   url: string,
 ) => {
   webSocketInstance.onerror = (error: WebSocketEventMap['error']) => {
@@ -92,25 +92,12 @@ const bindErrorHandler = (
       if (subscriber.optionsRef.current.onError) {
         subscriber.optionsRef.current.onError(error);
       }
-      if (isEventSourceSupported && webSocketInstance instanceof EventSource) {
-        subscriber.optionsRef.current.onClose && subscriber.optionsRef.current.onClose({
-          ...error,
-          code: 1006,
-          reason: `An error occurred with the EventSource: ${error}`,
-          wasClean: false,
-        });
-
-        subscriber.setReadyState(ReadyState.CLOSED);
-      }
     });
-    if (isEventSourceSupported && webSocketInstance instanceof EventSource) {
-      webSocketInstance.close();
-    }
   };
 };
 
 export const attachSharedListeners = (
-  webSocketInstance: WebSocketLike,
+  webSocketInstance: WebSocket,
   url: string,
   optionsRef: MutableRefObject<Options>
 ) => {

@@ -1,7 +1,5 @@
-import { WebSocketLike } from "./types";
-
 export interface SharedWebSockets {
-  [url: string]: WebSocketLike;
+  [url: string]: WebSocket;
 }
 
 export const sharedWebSockets: SharedWebSockets = {};

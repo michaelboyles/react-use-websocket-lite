@@ -19,12 +19,9 @@ export interface Options {
   reconnectAttempts?: number;
   filter?: (message: WebSocketEventMap['message']) => boolean;
   retryOnError?: boolean;
-  eventSourceOptions?: EventSourceOnly;
   skipAssert?: boolean;
   heartbeat?: boolean | HeartbeatOptions;
 }
-
-export type EventSourceOnly = Omit<Options, 'eventSourceOptions'> & EventSourceInit;
 
 export type HeartbeatOptions = {
   message?: "ping" | "pong" | string | (() => string);
@@ -32,14 +29,6 @@ export type HeartbeatOptions = {
   timeout?: number;
   interval?: number;
 };
-
-export interface EventSourceEventHandlers {
-  [eventName: string]: (message: EventSourceEventMap['message']) => void;
-}
-
-export interface EventSourceOptions extends EventSourceOnly {
-  events?: EventSourceEventHandlers;
-}
 
 export type ReadyStateState = {
   [url: string]: ReadyState,
@@ -61,15 +50,5 @@ export type WebSocketHook = {
   sendMessage: SendMessage,
   sendJsonMessage: SendJsonMessage,
   readyState: ReadyState,
-  getWebSocket: () => (WebSocketLike | null),
+  getWebSocket: () => (WebSocket | null),
 }
-
-export type EventSourceHook = Omit<
-  WebSocketHook,
-  'sendMessage' | 'sendJsonMessage' | 'lastMessage' | 'lastJsonMessage' | 'getWebSocket'
-> & {
-  getEventSource: () => (WebSocketLike | null),
-}
-
-export type WebSocketLike = WebSocket | EventSource;
-
