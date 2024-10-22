@@ -8,33 +8,29 @@ export type Subscriber = {
     reconnect: MutableRefObject<() => void>
 }
 
-export type Subscribers = {
-    [url: string]: Set<Subscriber>,
-}
-
-const subscribers: Subscribers = {};
+const urlToSubscribers: Record<string, Set<Subscriber>> = {};
 
 export function hasSubscribers(url: string): boolean {
-    return subscribers[url]?.size > 0;
+    return urlToSubscribers[url]?.size > 0;
 }
 
 export function addSubscriber(url: string, subscriber: Subscriber): void {
-    subscribers[url] = subscribers[url] || new Set<Subscriber>();
-    subscribers[url].add(subscriber);
+    urlToSubscribers[url] = urlToSubscribers[url] || new Set<Subscriber>();
+    urlToSubscribers[url].add(subscriber);
 }
 
 export function removeSubscriber(url: string, subscriber: Subscriber): void {
-    subscribers[url].delete(subscriber);
+    urlToSubscribers[url].delete(subscriber);
 }
 
 export function resetSubscribers(url?: string): void {
-    if (url && subscribers.hasOwnProperty(url)) {
-        delete subscribers[url];
+    if (url && urlToSubscribers.hasOwnProperty(url)) {
+        delete urlToSubscribers[url];
     }
     else {
-        for (let url in subscribers) {
-            if (subscribers.hasOwnProperty(url)) {
-                delete subscribers[url];
+        for (let url in urlToSubscribers) {
+            if (urlToSubscribers.hasOwnProperty(url)) {
+                delete urlToSubscribers[url];
             }
         }
     }
