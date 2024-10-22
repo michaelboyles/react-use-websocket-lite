@@ -23,7 +23,7 @@ export type HeartbeatOptions = {
 
 export type ReadyState = "uninstantiated" | "connecting" | "open" | "closing" | "closed";
 
-export type WebSocketMessage = string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView;
+export type WebSocketMessage = Parameters<WebSocket['send']>[0];
 
 export type SendMessage = (message: WebSocketMessage, keep?: boolean) => void;
 
