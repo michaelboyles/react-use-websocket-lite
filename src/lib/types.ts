@@ -27,6 +27,9 @@ export interface Options {
     reconnectInterval?: number | ((lastAttemptNumber: number) => number)
     reconnectAttempts?: number
     retryOnError?: boolean
+    // The connection is closed after not receiving a message for this many milliseconds
+    // Default: no timeout
+    messageTimeout?: number
     // Options
     // Default: false, i.e. no heartbeat behaviour
     heartbeat?: boolean | HeartbeatOptions
@@ -37,8 +40,6 @@ export type HeartbeatOptions = {
     message?: "ping" | "pong" | string | (() => string)
     // The interval between outgoing messages, in milliseconds
     interval?: number
-    // The connection is closed after not receiving a message for this many milliseconds
-    timeout?: number
 };
 
 export type ReadyState = "uninstantiated" | "connecting" | "open" | "closing" | "closed";

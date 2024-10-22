@@ -16,6 +16,7 @@ export function attachListeners(
     let didOpen = false;
     let reconnectTimeout: number | undefined;
 
+    const messageTimeout = optionsRef.current.messageTimeout;
     const heartbeatOpts = optionsRef.current.heartbeat;
 
     websocket.onopen = event => {
@@ -35,12 +36,14 @@ export function attachListeners(
         };
 
         let resetTimeout: () => void = () => {};
+        if (messageTimeout) {
+            resetTimeout = startTimeout(websocket, messageTimeout ?? DEFAULT_MESSAGE_TIMEOUT);
+        }
+
         if (heartbeatOpts) {
-            const heartbeatOptions = typeof heartbeatOpts === "boolean" ? undefined : heartbeatOpts;
-            const interval = heartbeatOptions?.interval ?? DEFAULT_HEARTBEAT_INTERVAL;
-            const message = heartbeatOptions?.message ?? DEFAULT_HEARTBEAT_MESSAGE;
+            const interval = (typeof heartbeatOpts === "object" && heartbeatOpts?.interval) || DEFAULT_HEARTBEAT_INTERVAL;
+            const message = (typeof heartbeatOpts === "object" && heartbeatOpts?.message) || DEFAULT_HEARTBEAT_MESSAGE;
             startHeartbeat(websocket, interval, message);
-            resetTimeout = startTimeout(websocket, heartbeatOptions?.timeout ?? DEFAULT_MESSAGE_TIMEOUT);
         }
         websocket.onmessage = message => {
             resetTimeout();
