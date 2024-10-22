@@ -63,26 +63,16 @@ function bindCloseHandler(
     reconnect: () => void,
     reconnectCount: MutableRefObject<number>,
 ) {
-    let reconnectTimeout: number;
+    let reconnectTimeout: number | undefined;
 
     websocket.onclose = event => {
         optionsRef.current.onClose && optionsRef.current.onClose(event);
         setReadyState("closed");
         if (optionsRef.current.shouldReconnect && optionsRef.current.shouldReconnect(event)) {
-            const reconnectAttempts = optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
-            if (reconnectCount.current < reconnectAttempts) {
-                const nextReconnectInterval = typeof optionsRef.current.reconnectInterval === 'function' ?
-                    optionsRef.current.reconnectInterval(reconnectCount.current) :
-                    optionsRef.current.reconnectInterval;
-
-                reconnectTimeout = window.setTimeout(() => {
-                    reconnectCount.current++;
-                    reconnect();
-                }, nextReconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS);
-            } else {
-                optionsRef.current.onReconnectStop && optionsRef.current.onReconnectStop(reconnectAttempts);
-                console.warn(`Max reconnect attempts of ${reconnectAttempts} exceeded`);
-            }
+            reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef.current, reconnectCount.current, () => {
+                reconnectCount.current++;
+                reconnect();
+            });
         }
     };
     return () => reconnectTimeout && window.clearTimeout(reconnectTimeout);
@@ -94,28 +84,31 @@ function bindErrorHandler(
     reconnect: () => void,
     reconnectCount: MutableRefObject<number>,
 ) {
-    let reconnectTimeout: number;
+    let reconnectTimeout: number | undefined;
 
     websocket.onerror = error => {
         optionsRef.current.onError?.(error);
 
         if (optionsRef.current.retryOnError) {
-            const reconnectAttempts = optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
-            if (reconnectCount.current < reconnectAttempts) {
-                const nextReconnectInterval = typeof optionsRef.current.reconnectInterval === 'function' ?
-                    optionsRef.current.reconnectInterval(reconnectCount.current) :
-                    optionsRef.current.reconnectInterval;
-
-                reconnectTimeout = window.setTimeout(() => {
-                    reconnectCount.current++;
-                    reconnect();
-                }, nextReconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS);
-            }
-            else {
-                optionsRef.current.onReconnectStop && optionsRef.current.onReconnectStop(reconnectAttempts);
-                console.warn(`Max reconnect attempts of ${reconnectAttempts} exceeded`);
-            }
+            reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef.current, reconnectCount.current, () => {
+                reconnectCount.current++;
+                reconnect();
+            });
         }
     };
     return () => reconnectTimeout && window.clearTimeout(reconnectTimeout);
+}
+
+function reconnectIfBelowAttemptLimit(options: Options, reconnectCount: number, reconnect: () => void) {
+    const reconnectAttempts = options.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
+    if (reconnectCount >= reconnectAttempts) {
+        options.onReconnectStop && options.onReconnectStop(reconnectAttempts);
+        console.warn(`Max reconnect attempts of ${reconnectAttempts} exceeded`);
+        return;
+    }
+
+    const nextReconnectInterval = typeof options.reconnectInterval === 'function' ?
+        options.reconnectInterval(reconnectCount) :
+        options.reconnectInterval;
+    return window.setTimeout(reconnect, nextReconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS);
 }
