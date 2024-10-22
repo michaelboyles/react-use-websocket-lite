@@ -19,7 +19,6 @@ export interface Options {
     reconnectAttempts?: number
     filter?: (message: WebSocketEventMap['message']) => boolean
     retryOnError?: boolean
-    skipAssert?: boolean
     heartbeat?: boolean | HeartbeatOptions
 }
 
@@ -50,3 +49,4 @@ export type WebSocketHook = {
     readyState: ReadyState
     getWebSocket: () => (WebSocket | null)
 }
+

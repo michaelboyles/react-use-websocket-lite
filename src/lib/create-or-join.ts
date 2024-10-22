@@ -43,14 +43,15 @@ export function createOrJoinSocket(
         );
     }
     else {
-        webSocketRef.current = new WebSocket(url, optionsRef.current.protocols);
+        const websocket = new WebSocket(url, optionsRef.current.protocols);
+        webSocketRef.current = websocket;
         setReadyState(ReadyState.CONNECTING);
-        if (!webSocketRef.current) {
+        if (!websocket) {
             throw new Error('WebSocket failed to be created');
         }
 
         return attachListeners(
-            webSocketRef.current,
+            websocket,
             setReadyState,
             optionsRef,
             startRef.current,

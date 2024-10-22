@@ -11,7 +11,6 @@ import {
     WebSocketMessage,
     WebSocketHook,
 } from './types';
-import { assertIsWebSocket } from './util';
 
 export function useWebSocket(
     url: string | (() => string | Promise<string>) | null,
@@ -38,19 +37,17 @@ export function useWebSocket(
         return ReadyState.UNINSTANTIATED;
     }();
 
-    const sendMessage: SendMessage = useCallback((message, keep = true) => {
+    const sendMessage: SendMessage = useCallback((message, queueable = true) => {
         if (webSocketRef.current?.readyState === ReadyState.OPEN) {
-            assertIsWebSocket(webSocketRef.current, optionsCache.current.skipAssert);
             webSocketRef.current.send(message);
         }
-        else if (keep) {
+        else if (queueable) {
             messageQueue.current.push(message);
         }
     }, []);
 
     const getWebSocket = useCallback(() => {
         if (webSocketProxy.current === null && webSocketRef.current) {
-            assertIsWebSocket(webSocketRef.current, optionsCache.current.skipAssert);
             webSocketProxy.current = websocketWrapper(webSocketRef.current, startRef);
         }
         return webSocketProxy.current;

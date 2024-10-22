@@ -6,7 +6,6 @@ import {
     ReadyState,
 } from './constants';
 import { Options } from './types';
-import { assertIsWebSocket } from './util';
 
 type SetReadyState = (readyState: ReadyState) => void;
 
@@ -92,7 +91,6 @@ function bindCloseHandler(
     reconnect: () => void,
     reconnectCount: MutableRefObject<number>,
 ) {
-    assertIsWebSocket(webSocketInstance, optionsRef.current.skipAssert);
     let reconnectTimeout: number;
 
     webSocketInstance.onclose = (event: WebSocketEventMap['close']) => {
