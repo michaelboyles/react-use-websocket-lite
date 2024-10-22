@@ -39,7 +39,7 @@ function bindMessageHandler(websocket: WebSocket, optionsRef: MutableRefObject<O
     }
     websocket.onmessage = message => {
         heartbeatCb?.();
-        optionsRef.current.onMessage && optionsRef.current.onMessage(message);
+        optionsRef.current.onMessage?.(message);
     };
 }
 
@@ -66,9 +66,9 @@ function bindCloseHandler(
     let reconnectTimeout: number | undefined;
 
     websocket.onclose = event => {
-        optionsRef.current.onClose && optionsRef.current.onClose(event);
+        optionsRef.current.onClose?.(event);
         setReadyState("closed");
-        if (optionsRef.current.shouldReconnect && optionsRef.current.shouldReconnect(event)) {
+        if (optionsRef.current.shouldReconnect?.(event)) {
             reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef.current, reconnectCount.current, () => {
                 reconnectCount.current++;
                 reconnect();
@@ -102,7 +102,7 @@ function bindErrorHandler(
 function reconnectIfBelowAttemptLimit(options: Options, reconnectCount: number, reconnect: () => void) {
     const reconnectAttempts = options.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
     if (reconnectCount >= reconnectAttempts) {
-        options.onReconnectStop && options.onReconnectStop(reconnectAttempts);
+        options.onReconnectStop?.(reconnectAttempts);
         console.warn(`Max reconnect attempts of ${reconnectAttempts} exceeded`);
         return;
     }
