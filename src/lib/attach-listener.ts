@@ -16,13 +16,16 @@ export function attachListeners(
     reconnect: () => void,
     reconnectCount: MutableRefObject<number>
 ): () => void {
+    let didOpen = false;
     let reconnectTimeout: number | undefined;
 
     bindMessageHandler(websocket, optionsRef);
 
     websocket.onopen = event => {
+        didOpen = true;
         optionsRef.current.onOpen?.(event);
         reconnectCount.current = 0;
+        setReadyState("open");
 
         websocket.onclose = event => {
             optionsRef.current.onClose?.(event);
@@ -47,12 +50,14 @@ export function attachListeners(
     };
 
     return () => {
-        setReadyState("closing");
+        if (didOpen && websocket.readyState !== WebSocket.CLOSED) {
+            setReadyState("closing");
+            websocket.close();
+        }
         if (reconnectTimeout !== undefined) {
             window.clearTimeout(reconnectTimeout);
             reconnectTimeout = undefined;
         }
-        websocket.close();
     };
 }
 
