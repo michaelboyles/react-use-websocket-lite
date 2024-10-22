@@ -1,5 +1,4 @@
 import { MutableRefObject } from 'react';
-import { setUpSocketIOPing } from './socket-io';
 import { heartbeat } from './heartbeat';
 import {
   DEFAULT_RECONNECT_LIMIT,
@@ -7,7 +6,7 @@ import {
   ReadyState,
   isEventSourceSupported,
 } from './constants';
-import { Options, SendMessage, WebSocketLike } from './types';
+import { Options, WebSocketLike } from './types';
 import { assertIsWebSocket } from './util';
 
 export interface Setters {
@@ -132,18 +131,13 @@ export const attachListeners = (
     setters: Setters,
     optionsRef: MutableRefObject<Options>,
     reconnect: () => void,
-    reconnectCount: MutableRefObject<number>,
-    sendMessage: SendMessage,
+    reconnectCount: MutableRefObject<number>
   ): (() => void) => {
   const { setReadyState } = setters;
 
   let interval: number;
   let cancelReconnectOnClose: () => void;
   let cancelReconnectOnError: () => void;
-
-  if (optionsRef.current.fromSocketIO) {
-    interval = setUpSocketIOPing(sendMessage);
-  }
 
   bindMessageHandler(
     webSocketInstance,

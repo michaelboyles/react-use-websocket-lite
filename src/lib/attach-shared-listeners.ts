@@ -2,8 +2,7 @@ import { sharedWebSockets } from './globals';
 import { DEFAULT_RECONNECT_LIMIT, DEFAULT_RECONNECT_INTERVAL_MS, ReadyState, isEventSourceSupported } from './constants';
 import { getSubscribers } from './manage-subscribers';
 import { MutableRefObject } from 'react';
-import { HeartbeatOptions, Options, SendMessage, WebSocketLike } from './types';
-import { setUpSocketIOPing } from './socket-io';
+import { HeartbeatOptions, Options, WebSocketLike } from './types';
 import { heartbeat } from './heartbeat';
 
 const bindMessageHandler = (
@@ -53,12 +52,12 @@ const bindCloseHandler = (
         if (subscriber.optionsRef.current.onClose) {
           subscriber.optionsRef.current.onClose(event);
         }
-  
+
         subscriber.setReadyState(ReadyState.CLOSED);
       });
-      
+
       delete sharedWebSockets[url];
-  
+
       getSubscribers(url).forEach(subscriber => {
         if (
           subscriber.optionsRef.current.shouldReconnect &&
@@ -100,7 +99,7 @@ const bindErrorHandler = (
           reason: `An error occurred with the EventSource: ${error}`,
           wasClean: false,
         });
-  
+
         subscriber.setReadyState(ReadyState.CLOSED);
       }
     });
@@ -113,14 +112,9 @@ const bindErrorHandler = (
 export const attachSharedListeners = (
   webSocketInstance: WebSocketLike,
   url: string,
-  optionsRef: MutableRefObject<Options>,
-  sendMessage: SendMessage,
+  optionsRef: MutableRefObject<Options>
 ) => {
   let interval: number;
-
-  if (optionsRef.current.fromSocketIO) {
-    interval = setUpSocketIOPing(sendMessage);
-  }
 
   bindMessageHandler(webSocketInstance, url, optionsRef.current.heartbeat);
   bindCloseHandler(webSocketInstance, url);

@@ -1,6 +1,5 @@
 import { MutableRefObject } from 'react';
-import { parseSocketIOUrl, appendQueryParams } from './socket-io';
-import { Options } from './types';
+import { Options, QueryParams } from './types';
 import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT } from './constants';
 
 const waitFor = (duration: number) => new Promise(resolve => window.setTimeout(resolve, duration));
@@ -24,7 +23,7 @@ export const getUrl = async (
             const nextReconnectInterval = typeof optionsRef.current.reconnectInterval === 'function' ?
               optionsRef.current.reconnectInterval(retriedAttempts) :
               optionsRef.current.reconnectInterval;
-    
+
             await waitFor(nextReconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS);
             return getUrl(url, optionsRef, retriedAttempts + 1);
           } else {
@@ -39,16 +38,19 @@ export const getUrl = async (
     convertedUrl = url;
   }
 
-  const parsedUrl = optionsRef.current.fromSocketIO ?
-    parseSocketIOUrl(convertedUrl) :
-    convertedUrl;
-
-  const parsedWithQueryParams = optionsRef.current.queryParams ?
-    appendQueryParams(
-      parsedUrl,
-      optionsRef.current.queryParams
-    ) :
-    parsedUrl;
-
-  return parsedWithQueryParams;
+  if (!optionsRef.current.queryParams) {
+    return convertedUrl;
+  }
+  return appendQueryParams(convertedUrl, optionsRef.current.queryParams);
 };
+
+function appendQueryParams(url: string, params: QueryParams): string {
+  const hasParamsRegex = /\?(\w+=\w+)/;
+  const alreadyHasParams = hasParamsRegex.test(url);
+
+  const stringified = `${Object.entries(params).reduce((next, [key, value]) => {
+    return next + `${key}=${value}&`;
+  }, '').slice(0, -1)}`;
+
+  return `${url}${alreadyHasParams ? '&' : '?'}${stringified}`;
+}
