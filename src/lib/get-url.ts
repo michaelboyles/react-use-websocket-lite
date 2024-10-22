@@ -1,10 +1,9 @@
-import { MutableRefObject } from 'react';
 import { Options, QueryParams } from './types';
 import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT } from './constants';
 
 export async function getUrl(
     url: string | (() => string | Promise<string>),
-    optionsRef: MutableRefObject<Options>,
+    options: Readonly<Options>,
     retriedAttempts: number = 0,
 ): Promise<string | null> {
     let convertedUrl: string;
@@ -14,18 +13,18 @@ export async function getUrl(
             convertedUrl = await url();
         }
         catch (e) {
-            if (optionsRef.current.retryOnError) {
-                const reconnectLimit = optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
+            if (options.retryOnError) {
+                const reconnectLimit = options.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
                 if (retriedAttempts < reconnectLimit) {
-                    const nextReconnectInterval = typeof optionsRef.current.reconnectInterval === 'function' ?
-                        optionsRef.current.reconnectInterval(retriedAttempts) :
-                        optionsRef.current.reconnectInterval;
+                    const nextReconnectInterval = typeof options.reconnectInterval === 'function' ?
+                        options.reconnectInterval(retriedAttempts) :
+                        options.reconnectInterval;
 
                     await waitFor(nextReconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS);
-                    return getUrl(url, optionsRef, retriedAttempts + 1);
+                    return getUrl(url, options, retriedAttempts + 1);
                 }
                 else {
-                    optionsRef.current.onReconnectStop?.(retriedAttempts);
+                    options.onReconnectStop?.(retriedAttempts);
                     return null;
                 }
             }
@@ -38,10 +37,10 @@ export async function getUrl(
         convertedUrl = url;
     }
 
-    if (!optionsRef.current.queryParams) {
+    if (!options.queryParams) {
         return convertedUrl;
     }
-    return appendQueryParams(convertedUrl, optionsRef.current.queryParams);
+    return appendQueryParams(convertedUrl, options.queryParams);
 }
 
 function appendQueryParams(url: string, params: QueryParams): string {

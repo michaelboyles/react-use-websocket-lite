@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { flushSync } from 'react-dom';
-import { DEFAULT_OPTIONS, ReadyState } from './constants';
+import { ReadyState } from './constants';
 import { createOrJoinSocket } from './create-or-join';
 import { getUrl } from './get-url';
 import {
@@ -13,8 +13,7 @@ import {
 import { mapReadyState } from "./util";
 
 export function useWebSocket(
-    url: string | (() => string | Promise<string>) | null,
-    options: Options = DEFAULT_OPTIONS,
+    options: Options,
     connect: boolean = true,
 ): WebSocketHook {
     const [readyState, setReadyState] = useState<ReadyStateState>({});
@@ -24,6 +23,7 @@ export function useWebSocket(
     const reconnectCount = useRef<number>(0);
     const messageQueue = useRef<WebSocketMessage[]>([]);
     const optionsCache = useRef<Options>(options);
+    const url = options.url;
     optionsCache.current = options;
 
     const readyStateFromUrl: ReadyState = function() {
@@ -54,7 +54,7 @@ export function useWebSocket(
             let createOrJoin = true;
 
             const start = async () => {
-                convertedUrl.current = await getUrl(url, optionsCache);
+                convertedUrl.current = await getUrl(url, optionsCache.current);
 
                 if (convertedUrl.current === null) {
                     console.error('Failed to get a valid URL. WebSocket connection aborted.');

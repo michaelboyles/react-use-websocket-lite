@@ -6,6 +6,7 @@ export interface QueryParams {
 }
 
 export interface Options {
+    url: string | (() => string | Promise<string>) | null
     queryParams?: QueryParams
     protocols?: string | string[]
     share?: boolean
