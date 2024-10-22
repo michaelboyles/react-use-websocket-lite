@@ -5,12 +5,12 @@ export interface Options {
     url: string | null | (() => (string | Promise<string>))
     protocols?: string | string[]
     share?: boolean
-    onOpen?: (event: WebSocketEventMap['open']) => void
-    onClose?: (event: WebSocketEventMap['close']) => void
-    onMessage?: (event: WebSocketEventMap['message']) => void
-    onError?: (event: WebSocketEventMap['error']) => void
-    onReconnectStop?: (numAttempts: number) => void
-    shouldReconnect?: (event: WebSocketEventMap['close']) => boolean
+    onOpen?(event: WebSocketEventMap['open']): void
+    onClose?(event: WebSocketEventMap['close']): void
+    onMessage?(event: WebSocketEventMap['message']): void
+    onError?(event: WebSocketEventMap['error']): void
+    onReconnectStop?(numAttempts: number): void
+    shouldReconnect?(event: WebSocketEventMap['close']): boolean
     reconnectInterval?: number | ((lastAttemptNumber: number) => number)
     reconnectAttempts?: number
     retryOnError?: boolean
@@ -33,7 +33,7 @@ export type WebSocketMessage = string | ArrayBuffer | SharedArrayBuffer | Blob |
 export type SendMessage = (message: WebSocketMessage, keep?: boolean) => void;
 
 export type Subscriber = {
-    setReadyState: (readyState: ReadyState) => void
+    setReadyState(readyState: ReadyState): void
     optionsRef: MutableRefObject<Options>
     reconnectCount: MutableRefObject<number>
     reconnect: MutableRefObject<() => void>
