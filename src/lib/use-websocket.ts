@@ -46,7 +46,7 @@ export function useWebSocket(
 
     useEffect(() => {
         if (url !== null && connect) {
-            let removeListeners: () => void;
+            let removeListeners: (() => void) | undefined;
             let expectClose = false;
             let createOrJoin = true;
 
