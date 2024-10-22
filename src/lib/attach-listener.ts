@@ -1,9 +1,10 @@
 import { MutableRefObject } from 'react';
-import { heartbeat } from './heartbeat';
 import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT } from './constants';
-import { Options, ReadyState } from './types';
+import { HeartbeatOptions, Options, ReadyState } from './types';
 
 const DEFAULT_MESSAGE_TIMEOUT = 60_000;
+const DEFAULT_HEARTBEAT_INTERVAL = 25_000;
+const DEFAULT_HEARTBEAT_MESSAGE = "ping";
 
 export function attachListeners(
     websocket: WebSocket,
@@ -36,7 +37,9 @@ export function attachListeners(
         let resetTimeout: () => void = () => {};
         if (heartbeatOpts) {
             const heartbeatOptions = typeof heartbeatOpts === "boolean" ? undefined : heartbeatOpts;
-            heartbeat(websocket, heartbeatOptions);
+            const interval = heartbeatOptions?.interval ?? DEFAULT_HEARTBEAT_INTERVAL;
+            const message = heartbeatOptions?.message ?? DEFAULT_HEARTBEAT_MESSAGE;
+            startHeartbeat(websocket, interval, message);
             resetTimeout = startTimeout(websocket, heartbeatOptions?.timeout ?? DEFAULT_MESSAGE_TIMEOUT);
         }
         websocket.onmessage = message => {
@@ -96,4 +99,21 @@ function startTimeout(websocket: WebSocket, timeout: number) {
         clearTimeout(taskId);
         taskId = resetTimeout();
     };
+}
+
+function startHeartbeat(websocket: WebSocket, interval: number, message: NonNullable<HeartbeatOptions['message']>) {
+    const taskId = setInterval(() => {
+        try {
+            if (typeof message === 'function') {
+                websocket.send(message());
+            }
+            else {
+                websocket.send(message);
+            }
+        }
+        catch (error) {
+            // do nothing
+        }
+    }, interval);
+    websocket.addEventListener("close", () => clearInterval(taskId));
 }
