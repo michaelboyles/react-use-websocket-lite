@@ -16,35 +16,10 @@ export function attachListeners(
     reconnect: () => void,
     reconnectCount: MutableRefObject<number>
 ): () => void {
-    let cancelReconnectOnClose: () => void;
-    let cancelReconnectOnError: () => void;
-
-    bindMessageHandler(
-        websocket,
-        optionsRef,
-    );
-
-    bindOpenHandler(
-        websocket,
-        optionsRef,
-        setReadyState,
-        reconnectCount,
-    );
-
-    cancelReconnectOnClose = bindCloseHandler(
-        websocket,
-        optionsRef,
-        setReadyState,
-        reconnect,
-        reconnectCount,
-    );
-
-    cancelReconnectOnError = bindErrorHandler(
-        websocket,
-        optionsRef,
-        reconnect,
-        reconnectCount,
-    );
+    bindMessageHandler(websocket, optionsRef);
+    bindOpenHandler(websocket, optionsRef, setReadyState, reconnectCount);
+    const cancelReconnectOnClose = bindCloseHandler(websocket, optionsRef, setReadyState, reconnect, reconnectCount);
+    const cancelReconnectOnError = bindErrorHandler(websocket, optionsRef, reconnect, reconnectCount);
 
     return () => {
         setReadyState("closing");
