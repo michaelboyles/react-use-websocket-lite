@@ -13,14 +13,6 @@ export type Subscribers = {
 }
 
 const subscribers: Subscribers = {};
-const EMPTY_LIST: Subscriber[] = [];
-
-export function getSubscribers(url: string): Subscriber[] {
-    if (hasSubscribers(url)) {
-        return Array.from(subscribers[url]);
-    }
-    return EMPTY_LIST;
-}
 
 export function hasSubscribers(url: string): boolean {
     return subscribers[url]?.size > 0;
