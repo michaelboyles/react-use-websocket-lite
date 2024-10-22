@@ -8,8 +8,7 @@ import {
     WebSocketMessage,
     WebSocketHook,
 } from './types';
-import { mapReadyState } from "./util";
-import { attachListeners } from "./attach-listener";
+import { attachListeners } from "./listen";
 
 export function useWebSocket(
     options: Options,
@@ -156,4 +155,14 @@ async function getUrl(
 
 function waitFor(duration: number) {
     return new Promise(resolve => window.setTimeout(resolve, duration));
+}
+
+function mapReadyState(state: number): ReadyState {
+    switch (state) {
+        case 0: return "connecting";
+        case 1: return "open";
+        case 2: return "closing";
+        case 3: return "closed";
+        default: throw new Error("Invalid ready state: " + state);
+    }
 }
