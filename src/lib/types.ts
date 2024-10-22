@@ -37,7 +37,6 @@ export type ReadyStateState = {
 export type WebSocketMessage = string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView;
 
 export type SendMessage = (message: WebSocketMessage, keep?: boolean) => void;
-export type SendJsonMessage = <T = unknown>(jsonMessage: T, keep?: boolean) => void;
 
 export type Subscriber = {
     setReadyState: (readyState: ReadyState) => void
@@ -48,7 +47,6 @@ export type Subscriber = {
 
 export type WebSocketHook = {
     sendMessage: SendMessage
-    sendJsonMessage: SendJsonMessage
     readyState: ReadyState
     getWebSocket: () => (WebSocket | null)
 }

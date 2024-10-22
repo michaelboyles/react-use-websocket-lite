@@ -8,7 +8,6 @@ import {
     Options,
     ReadyStateState,
     SendMessage,
-    SendJsonMessage,
     WebSocketMessage,
     WebSocketHook,
 } from './types';
@@ -47,10 +46,6 @@ export function useWebSocket(
             messageQueue.current.push(message);
         }
     }, []);
-
-    const sendJsonMessage: SendJsonMessage = useCallback((message, keep = true) => {
-        sendMessage(JSON.stringify(message), keep);
-    }, [sendMessage]);
 
     const getWebSocket = useCallback(() => {
         if (webSocketProxy.current === null && webSocketRef.current) {
@@ -136,7 +131,6 @@ export function useWebSocket(
 
     return {
         sendMessage,
-        sendJsonMessage,
         readyState: readyStateFromUrl,
         getWebSocket,
     };
