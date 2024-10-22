@@ -32,13 +32,11 @@ export function useWebSocket(
         if (convertedUrl.current && readyState[convertedUrl.current] !== undefined) {
             return readyState[convertedUrl.current];
         }
-        if (url !== null && connect === true) {
+        if (url !== null && connect) {
             return ReadyState.CONNECTING;
         }
         return ReadyState.UNINSTANTIATED;
     }();
-
-    const stringifiedQueryParams = options.queryParams ? JSON.stringify(options.queryParams) : null;
 
     const sendMessage: SendMessage = useCallback((message, keep = true) => {
         if (webSocketRef.current?.readyState === ReadyState.OPEN) {
@@ -58,8 +56,10 @@ export function useWebSocket(
         return webSocketProxy.current;
     }, []);
 
+    const queryString = options.queryParams ? JSON.stringify(options.queryParams) : null;
+
     useEffect(() => {
-        if (url !== null && connect === true) {
+        if (url !== null && connect) {
             let removeListeners: () => void;
             let expectClose = false;
             let createOrJoin = true;
@@ -115,15 +115,16 @@ export function useWebSocket(
                 removeListeners?.();
             };
         }
-        else if (url === null || connect === false) {
-            reconnectCount.current = 0; // reset reconnection attempts
+        else if (url === null || connect) {
+            reconnectCount.current = 0;
             setReadyState(prev => ({
                 ...prev,
                 ...(convertedUrl.current && {[convertedUrl.current]: ReadyState.CLOSED}),
             }));
         }
-    }, [url, connect, stringifiedQueryParams, sendMessage]);
+    }, [url, connect, queryString, sendMessage]);
 
+    // Drain the queue on connect
     useEffect(() => {
         if (readyStateFromUrl === ReadyState.OPEN) {
             messageQueue.current.splice(0).forEach(message => {
