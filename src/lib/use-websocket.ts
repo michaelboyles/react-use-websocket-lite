@@ -16,18 +16,18 @@ export function useWebSocket(
     connect: boolean = true,
 ): WebSocketHook {
     const [readyState, setReadyState] = useState<Record<string, ReadyState>>({});
-    const convertedUrl = useRef<string | null>(null);
+    const activeUrl = useRef<string | null>(null);
     const webSocketRef = useRef<WebSocket | null>(null);
     const startRef = useRef<() => void>(() => void 0);
     const reconnectCount = useRef<number>(0);
     const messageQueue = useRef<WebSocketMessage[]>([]);
-    const optionsCache = useRef<Options>(options);
+    const activeOptions = useRef<Options>(options);
     const url = options.url;
-    optionsCache.current = options;
+    activeOptions.current = options;
 
-    const readyStateFromUrl: ReadyState = function() {
-        if (convertedUrl.current && readyState[convertedUrl.current] !== undefined) {
-            return readyState[convertedUrl.current];
+    const readyStateForUrl: ReadyState = function() {
+        if (activeUrl.current && readyState[activeUrl.current] !== undefined) {
+            return readyState[activeUrl.current];
         }
         if (url !== null && connect) {
             return "connecting";
@@ -51,11 +51,11 @@ export function useWebSocket(
             let expectOpen = true;
 
             const start = async () => {
-                convertedUrl.current = typeof url === "string" ? url : await getUrl(url, optionsCache.current);
+                activeUrl.current = typeof url === "string" ? url : await getUrl(url, activeOptions.current);
 
-                if (convertedUrl.current === null) {
+                if (activeUrl.current === null) {
                     console.error('Failed to get a valid URL. WebSocket connection aborted.');
-                    convertedUrl.current = 'ABORTED';
+                    activeUrl.current = 'ABORTED';
                     flushSync(() => setReadyState(prev => ({
                         ...prev,
                         ABORTED: "closed",
@@ -67,8 +67,8 @@ export function useWebSocket(
                 const protectedSetReadyState = (state: ReadyState) => {
                     if (expectOpen) {
                         flushSync(() => setReadyState(prev => {
-                            if (convertedUrl.current && prev[convertedUrl.current] !== state) {
-                                return { ...prev, [convertedUrl.current]: state };
+                            if (activeUrl.current && prev[activeUrl.current] !== state) {
+                                return { ...prev, [activeUrl.current]: state };
                             }
                             return prev;
                         }));
@@ -78,9 +78,9 @@ export function useWebSocket(
                 if (expectOpen) {
                     removeListeners = createOrJoinSocket(
                         webSocketRef,
-                        convertedUrl.current,
+                        activeUrl.current,
                         protectedSetReadyState,
-                        optionsCache,
+                        activeOptions,
                         startRef,
                         reconnectCount,
                     );
@@ -103,8 +103,8 @@ export function useWebSocket(
         else {
             reconnectCount.current = 0;
             setReadyState(prev => {
-                if (convertedUrl.current && prev[convertedUrl.current] !== "closed") {
-                    return { ...prev, [convertedUrl.current]: "closed" }
+                if (activeUrl.current && prev[activeUrl.current] !== "closed") {
+                    return { ...prev, [activeUrl.current]: "closed" }
                 }
                 return prev;
             });
@@ -113,16 +113,16 @@ export function useWebSocket(
 
     // Drain the queue on connect
     useEffect(() => {
-        if (readyStateFromUrl === "open") {
+        if (readyStateForUrl === "open") {
             messageQueue.current.splice(0).forEach(message => {
                 sendMessage(message);
             });
         }
-    }, [readyStateFromUrl]);
+    }, [readyStateForUrl]);
 
     return {
         sendMessage,
-        readyState: readyStateFromUrl
+        readyState: readyStateForUrl
     };
 }
 
