@@ -68,20 +68,16 @@ function cleanSubscribers(
         removeSubscriber(url, subscriber);
         if (!hasSubscribers(url)) {
             try {
-                const socketLike = sharedWebSockets[url];
-                if (socketLike instanceof WebSocket) {
-                    socketLike.onclose = (event: WebSocketEventMap['close']) => {
-                        if (optionsRef.current.onClose) {
-                            optionsRef.current.onClose(event);
-                        }
-                        setReadyState(ReadyState.CLOSED);
-                    };
-                }
-                socketLike.close();
-            } catch (e) {
-
+                const websocket = sharedWebSockets[url];
+                websocket.onclose = event => {
+                    optionsRef.current.onClose?.(event);
+                    setReadyState(ReadyState.CLOSED);
+                };
+                websocket.close();
             }
-
+            catch (e) {
+                // Do nothing
+            }
             delete sharedWebSockets[url];
         }
     }
