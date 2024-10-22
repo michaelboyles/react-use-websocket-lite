@@ -8,9 +8,7 @@ import {
 import { Options } from './types';
 import { assertIsWebSocket } from './util';
 
-export interface Setters {
-    setReadyState: (readyState: ReadyState) => void;
-}
+type SetReadyState = (readyState: ReadyState) => void;
 
 function bindMessageHandler(websocket: WebSocket, optionsRef: MutableRefObject<Options>) {
     let heartbeatCb: () => void;
@@ -32,7 +30,7 @@ function bindMessageHandler(websocket: WebSocket, optionsRef: MutableRefObject<O
 function bindOpenHandler(
     webSocketInstance: WebSocket,
     optionsRef: MutableRefObject<Options>,
-    setReadyState: Setters['setReadyState'],
+    setReadyState: SetReadyState,
     reconnectCount: MutableRefObject<number>,
 ) {
     webSocketInstance.onopen = (event: WebSocketEventMap['open']) => {
@@ -45,7 +43,7 @@ function bindOpenHandler(
 function bindCloseHandler(
     webSocketInstance: WebSocket,
     optionsRef: MutableRefObject<Options>,
-    setReadyState: Setters['setReadyState'],
+    setReadyState: SetReadyState,
     reconnect: () => void,
     reconnectCount: MutableRefObject<number>,
 ) {
@@ -108,13 +106,11 @@ function bindErrorHandler(
 
 export function attachListeners(
     webSocketInstance: WebSocket,
-    setters: Setters,
+    setReadyState: SetReadyState,
     optionsRef: MutableRefObject<Options>,
     reconnect: () => void,
     reconnectCount: MutableRefObject<number>
 ): () => void {
-    const {setReadyState} = setters;
-
     let cancelReconnectOnClose: () => void;
     let cancelReconnectOnError: () => void;
 

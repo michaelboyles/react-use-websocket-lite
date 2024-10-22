@@ -80,9 +80,7 @@ export function createOrJoinSocket(
 
         return attachListeners(
             webSocketRef.current,
-            {
-                setReadyState
-            },
+            setReadyState,
             optionsRef,
             startRef.current,
             reconnectCount,
