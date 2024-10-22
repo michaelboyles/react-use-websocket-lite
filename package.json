@@ -1,0 +1,43 @@
+{
+  "name": "react-use-websocket-lite",
+  "version": "1.0.0",
+  "description": "React Hook for WebSocket communication",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.3.3"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michaelboyles/react-use-websocket-lite.git"
+  },
+  "keywords": [
+    "react",
+    "react-hooks",
+    "websocket",
+    "websockets"
+  ],
+  "contributors": [
+    "Michael Boyles <michael@boyl.es>",
+    "Robert Taussig <robert.taussig@gmail.com> (robtaussig.com)"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/michaelboyles/react-use-websocket-lite/issues"
+  },
+  "homepage": "https://github.com/michaelboyles/react-use-websocket-lite#readme"
+}
