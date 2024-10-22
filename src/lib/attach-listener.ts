@@ -32,15 +32,12 @@ export function attachListeners(
 function bindMessageHandler(websocket: WebSocket, optionsRef: MutableRefObject<Options>) {
     let heartbeatCb: () => void;
 
-    if (optionsRef.current.heartbeat && websocket instanceof WebSocket) {
-        const heartbeatOptions =
-            typeof optionsRef.current.heartbeat === "boolean"
-                ? undefined
-                : optionsRef.current.heartbeat;
+    const heartbeatOpts = optionsRef.current.heartbeat;
+    if (heartbeatOpts) {
+        const heartbeatOptions = typeof heartbeatOpts === "boolean" ? undefined : heartbeatOpts;
         heartbeatCb = heartbeat(websocket, heartbeatOptions);
     }
-
-    websocket.onmessage = (message: WebSocketEventMap['message']) => {
+    websocket.onmessage = message => {
         heartbeatCb?.();
         optionsRef.current.onMessage && optionsRef.current.onMessage(message);
     };
@@ -68,7 +65,7 @@ function bindCloseHandler(
 ) {
     let reconnectTimeout: number;
 
-    websocket.onclose = (event: WebSocketEventMap['close']) => {
+    websocket.onclose = event => {
         optionsRef.current.onClose && optionsRef.current.onClose(event);
         setReadyState("closed");
         if (optionsRef.current.shouldReconnect && optionsRef.current.shouldReconnect(event)) {
