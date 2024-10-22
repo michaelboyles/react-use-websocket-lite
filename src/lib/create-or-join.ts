@@ -35,25 +35,14 @@ export function createOrJoinSocket(
 
         addSubscriber(url, subscriber);
 
-        return cleanSubscribers(
-            url,
-            subscriber,
-            optionsRef,
-            setReadyState,
-        );
+        return cleanSubscribers(url, subscriber, optionsRef, setReadyState);
     }
     else {
         const websocket = new WebSocket(url, optionsRef.current.protocols);
         webSocketRef.current = websocket;
         setReadyState("connecting");
 
-        return attachListeners(
-            websocket,
-            setReadyState,
-            optionsRef,
-            startRef.current,
-            reconnectCount,
-        );
+        return attachListeners(websocket, setReadyState, optionsRef, startRef.current, reconnectCount);
     }
 }
 
