@@ -46,5 +46,4 @@ export type Subscriber = {
 export type WebSocketHook = {
     sendMessage: SendMessage
     readyState: ReadyState
-    getWebSocket: () => (WebSocket | null)
 }

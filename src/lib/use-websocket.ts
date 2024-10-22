@@ -3,7 +3,6 @@ import { flushSync } from 'react-dom';
 import { DEFAULT_OPTIONS, ReadyState } from './constants';
 import { createOrJoinSocket } from './create-or-join';
 import { getUrl } from './get-url';
-import websocketWrapper from './proxy';
 import {
     Options,
     ReadyStateState,
@@ -44,13 +43,6 @@ export function useWebSocket(
         else if (queueable) {
             messageQueue.current.push(message);
         }
-    }, []);
-
-    const getWebSocket = useCallback(() => {
-        if (webSocketProxy.current === null && webSocketRef.current) {
-            webSocketProxy.current = websocketWrapper(webSocketRef.current, startRef);
-        }
-        return webSocketProxy.current;
     }, []);
 
     const queryString = options.queryParams ? JSON.stringify(options.queryParams) : null;
@@ -132,7 +124,6 @@ export function useWebSocket(
 
     return {
         sendMessage,
-        readyState: readyStateFromUrl,
-        getWebSocket,
+        readyState: readyStateFromUrl
     };
 }
