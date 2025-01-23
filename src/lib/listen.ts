@@ -32,6 +32,7 @@ export function attachListeners(
                     reconnect();
                 });
             }
+            setReadyState(reconnectTimeout ? "connecting" : "closed");
             optionsRef.current.onClose?.(event);
         };
 
