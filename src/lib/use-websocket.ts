@@ -19,7 +19,7 @@ export function useWebSocket(options: Options): WebSocketHook {
     const messageQueue = useRef<WebSocketMessage[]>([]);
     const activeOptions = useRef<Options>(options);
     const url = options.url;
-    const connect = options.connect;
+    const connect = options.connect ?? true;
     activeOptions.current = options;
 
     const readyStateForUrl: ReadyState = function() {
