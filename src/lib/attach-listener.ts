@@ -1,10 +1,6 @@
 import { MutableRefObject, RefObject } from 'react';
-import {
-  DEFAULT_RECONNECT_LIMIT,
-  DEFAULT_RECONNECT_INTERVAL_MS,
-  ReadyState, DEFAULT_HEARTBEAT,
-} from './constants';
-import { HeartbeatOptions, Options } from './types';
+import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT, ReadyState } from './constants';
+import { Options } from './types';
 
 export function attachListeners(
     webSocketInstance: WebSocket,
@@ -14,14 +10,6 @@ export function attachListeners(
     reconnectCount: MutableRefObject<number>,
 ): () => void {
   let messageTimeoutMonitor: MessageTimeoutMonitor | undefined;
-
-  if (optionsRef.current.heartbeat) {
-    const heartbeatOptions =
-        typeof optionsRef.current.heartbeat === "boolean"
-            ? undefined
-            : optionsRef.current.heartbeat;
-    heartbeat(webSocketInstance, heartbeatOptions);
-  }
 
   webSocketInstance.onmessage = message => {
     messageTimeoutMonitor?.markMessageReceived();
@@ -33,6 +21,7 @@ export function attachListeners(
     reconnectCount.current = 0;
     setReadyState(ReadyState.OPEN);
     messageTimeoutMonitor = startMessageTimeoutMonitor(webSocketInstance, optionsRef);
+    startHeartbeats(webSocketInstance, optionsRef);
   };
 
   let reconnectTimeout: number | undefined;
@@ -85,26 +74,35 @@ function reconnectIfBelowAttemptLimit(
   }
 }
 
-function heartbeat(ws: WebSocket, options?: HeartbeatOptions) {
-  const {
-    interval = DEFAULT_HEARTBEAT.interval,
-    message = DEFAULT_HEARTBEAT.message,
-  } = options || {};
+function startHeartbeats(ws: WebSocket, options: RefObject<Options>) {
+  let timeout: number | undefined;
 
-  const pingTimer = setInterval(() => {
-    try {
-      if (typeof message === 'function') {
-        ws.send(message());
-      } else {
-        ws.send(message);
+  function scheduleNextHeartbeat() {
+    const interval = options.current?.heartbeat?.interval;
+    if (!interval) return;
+    timeout = setTimeout(() => {
+      try {
+        const message = options?.current?.heartbeat?.message;
+        if (message) {
+          if (typeof message === 'function') {
+            ws.send(message());
+          }
+          else {
+            ws.send(message);
+          }
+        }
       }
-    } catch (error) {
-      // do nothing
-    }
-  }, interval);
+      catch (error) {
+        // do nothing
+      }
+      scheduleNextHeartbeat();
+    }, interval);
+  }
+
+  scheduleNextHeartbeat();
 
   ws.addEventListener("close", () => {
-    clearInterval(pingTimer);
+    clearInterval(timeout);
   });
 }
 

@@ -18,17 +18,16 @@ export interface Options {
   reconnectInterval?: number | ((lastAttemptNumber: number) => number);
   reconnectAttempts?: number;
   retryOnError?: boolean;
-  heartbeat?: boolean | HeartbeatOptions;
+  heartbeat?: HeartbeatOptions;
   // The connection is closed after not receiving a message for this many milliseconds
   // Default: no timeout
   messageTimeout?: number;
 }
 
 export type HeartbeatOptions = {
-  message?: "ping" | "pong" | string | (() => string);
-  returnMessage?: "ping" | "pong" | string;
-  interval?: number;
-};
+  message: string | (() => string);
+  interval: number;
+}
 
 export type ReadyStateState = {
   [url: string]: ReadyState,
