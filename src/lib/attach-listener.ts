@@ -1,11 +1,10 @@
 import { MutableRefObject } from 'react';
-import { heartbeat } from './heartbeat';
 import {
   DEFAULT_RECONNECT_LIMIT,
   DEFAULT_RECONNECT_INTERVAL_MS,
-  ReadyState,
+  ReadyState, DEFAULT_HEARTBEAT,
 } from './constants';
-import { Options } from './types';
+import { HeartbeatOptions, Options } from './types';
 
 export function attachListeners(
     webSocketInstance: WebSocket,
@@ -82,4 +81,43 @@ function reconnectIfBelowAttemptLimit(
     optionsRef.current.onReconnectStop?.(reconnectAttempts);
     console.warn(`Max reconnect attempts of ${reconnectAttempts} exceeded`);
   }
+}
+
+function heartbeat(ws: WebSocket, options?: HeartbeatOptions): () => void {
+  const {
+    interval = DEFAULT_HEARTBEAT.interval,
+    timeout = DEFAULT_HEARTBEAT.timeout,
+    message = DEFAULT_HEARTBEAT.message,
+  } = options || {};
+
+  let messageAccepted = false;
+
+  const pingTimer = setInterval(() => {
+    try {
+      if (typeof message === 'function') {
+        ws.send(message());
+      } else {
+        ws.send(message);
+      }
+    } catch (error) {
+      // do nothing
+    }
+  }, interval);
+
+  const timeoutTimer = setInterval(() => {
+    if (!messageAccepted) {
+      ws.close();
+    } else {
+      messageAccepted = false;
+    }
+  }, timeout);
+
+  ws.addEventListener("close", () => {
+    clearInterval(pingTimer);
+    clearInterval(timeoutTimer);
+  });
+
+  return () => {
+    messageAccepted = true;
+  };
 }
