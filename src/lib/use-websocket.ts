@@ -1,8 +1,8 @@
 import { MutableRefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT, ReadyState } from './constants';
-import { createOrJoinSocket } from './create-or-join';
 import { Options, ReadyStateState, SendMessage, WebSocketHook, WebSocketMessage, } from './types';
+import { attachListeners } from "./attach-listener";
 
 export const useWebSocket = (options: Options): WebSocketHook => {
   const { url, connect = true } = options;
@@ -66,14 +66,19 @@ export const useWebSocket = (options: Options): WebSocketHook => {
           }
         };
 
-        if(createOrJoin) {
-          removeListeners = createOrJoinSocket(
-            webSocketRef,
-            convertedUrl.current,
-            protectedSetReadyState,
-            optionsCache,
-            startRef,
-            reconnectCount,
+        if (createOrJoin) {
+          webSocketRef.current = new WebSocket(convertedUrl.current, optionsCache.current.protocols);
+          protectedSetReadyState(ReadyState.CONNECTING);
+          if (!webSocketRef.current) {
+            throw new Error('WebSocket failed to be created');
+          }
+
+          removeListeners = attachListeners(
+              webSocketRef.current,
+              protectedSetReadyState,
+              optionsCache,
+              startRef.current,
+              reconnectCount,
           );
         }
       };
@@ -144,7 +149,7 @@ async function getUrl(
     }
   }
   return null;
-};
+}
 
 function waitFor(duration: number) {
   return new Promise(resolve => window.setTimeout(resolve, duration));
