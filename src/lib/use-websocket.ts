@@ -107,7 +107,6 @@ export const useWebSocket = (
             optionsCache,
             startRef,
             reconnectCount,
-            sendMessage,
           );
         }
       };

@@ -2,8 +2,7 @@ import { sharedWebSockets } from './globals';
 import { DEFAULT_RECONNECT_LIMIT, DEFAULT_RECONNECT_INTERVAL_MS, ReadyState, isEventSourceSupported } from './constants';
 import { getSubscribers } from './manage-subscribers';
 import { MutableRefObject } from 'react';
-import { HeartbeatOptions, Options, SendMessage, WebSocketLike } from './types';
-import { setUpSocketIOPing } from './socket-io';
+import { HeartbeatOptions, Options, WebSocketLike } from './types';
 import { heartbeat } from './heartbeat';
 
 const bindMessageHandler = (
@@ -114,20 +113,9 @@ export const attachSharedListeners = (
   webSocketInstance: WebSocketLike,
   url: string,
   optionsRef: MutableRefObject<Options>,
-  sendMessage: SendMessage,
 ) => {
-  let interval: number;
-
-  if (optionsRef.current.fromSocketIO) {
-    interval = setUpSocketIOPing(sendMessage);
-  }
-
   bindMessageHandler(webSocketInstance, url, optionsRef.current.heartbeat);
   bindCloseHandler(webSocketInstance, url);
   bindOpenHandler(webSocketInstance, url);
   bindErrorHandler(webSocketInstance, url);
-
-  return () => {
-    if (interval) clearInterval(interval);
-  };
 };

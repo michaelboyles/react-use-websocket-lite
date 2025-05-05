@@ -4,11 +4,9 @@ import { useWebSocket } from './use-websocket';
 import WS from "jest-websocket-mock";
 import { Options } from './types';
 import { ReadyState } from './constants';
-import { parseSocketIOUrl } from './socket-io';
 
 let server: WS;
 const URL = 'ws://localhost:1234';
-const SOCKET_IO_URL = parseSocketIOUrl(URL);
 const noop = () => { };
 const DEFAULT_OPTIONS: Options = {};
 let options: Options;
@@ -353,19 +351,6 @@ test('shared websockets each have callbacks invoked as if unshared', async () =>
     expect(component2OnClose).toHaveBeenCalledTimes(1);
     expect(component3OnClose).toHaveBeenCalledTimes(1);
 })
-
-test('Options#fromSocketIO changes the WS url to support socket.io\'s required query params', async () => {
-    options.fromSocketIO = true;
-
-    const {
-        result
-    } = renderHook(() => useWebSocket(URL, options));
-
-    await waitFor(() => {
-        const ws = result.current.getWebSocket();
-        expect(ws?.url).toEqual(SOCKET_IO_URL);
-    });
-});
 
 test('Options#queryParams append object-based params as string to url', async () => {
     options.queryParams = { type: 'user', id: 5 };

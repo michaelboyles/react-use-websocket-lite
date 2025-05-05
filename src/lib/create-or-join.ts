@@ -1,6 +1,6 @@
 import { MutableRefObject } from 'react';
 import { sharedWebSockets } from './globals';
-import { Options, SendMessage, Subscriber, WebSocketLike } from './types';
+import { Options, Subscriber, WebSocketLike } from './types';
 import { isEventSourceSupported, ReadyState, isReactNative } from './constants';
 import { attachListeners } from './attach-listener';
 import { attachSharedListeners } from './attach-shared-listeners';
@@ -13,7 +13,6 @@ const cleanSubscribers = (
   subscriber: Subscriber,
   optionsRef: MutableRefObject<Options>,
   setReadyState: (readyState: ReadyState) => void,
-  clearSocketIoPingInterval: (() => void) | null,
 ) => {
   return () => {
     removeSubscriber(url, subscriber);
@@ -32,7 +31,6 @@ const cleanSubscribers = (
       } catch (e) {
 
       }
-      if (clearSocketIoPingInterval) clearSocketIoPingInterval();
 
       delete sharedWebSockets[url];
     }
@@ -46,7 +44,6 @@ export const createOrJoinSocket = (
   optionsRef: MutableRefObject<Options>,
   startRef: MutableRefObject<() => void>,
   reconnectCount: MutableRefObject<number>,
-  sendMessage: SendMessage,
 ): (() => void) => {
   if (!isEventSourceSupported && optionsRef.current.eventSourceOptions) {
     if (isReactNative) {
@@ -57,18 +54,16 @@ export const createOrJoinSocket = (
   }
 
   if (optionsRef.current.share) {
-    let clearSocketIoPingInterval: ((() => void) | null) = null;
     if (sharedWebSockets[url] === undefined) {
       sharedWebSockets[url] = optionsRef.current.eventSourceOptions ?
         new EventSource(url, optionsRef.current.eventSourceOptions) :
         new WebSocket(url, optionsRef.current.protocols);
       webSocketRef.current = sharedWebSockets[url];
       setReadyState(ReadyState.CONNECTING);
-      clearSocketIoPingInterval = attachSharedListeners(
+      attachSharedListeners(
         sharedWebSockets[url],
         url,
         optionsRef,
-        sendMessage,
       );
     } else {
       webSocketRef.current = sharedWebSockets[url];
@@ -89,7 +84,6 @@ export const createOrJoinSocket = (
       subscriber,
       optionsRef,
       setReadyState,
-      clearSocketIoPingInterval,
     );
   } else {
     webSocketRef.current = optionsRef.current.eventSourceOptions ?
@@ -108,7 +102,6 @@ export const createOrJoinSocket = (
       optionsRef,
       startRef.current,
       reconnectCount,
-      sendMessage,
     );
   }
 };
