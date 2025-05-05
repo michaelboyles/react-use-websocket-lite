@@ -216,12 +216,7 @@ test('websocket is closed when the component unmounts', async () => {
 })
 
 test('Websocket can reconnect after timeout', async () => {
-    options.heartbeat = {
-        message: 'ping',
-        returnMessage: 'pong',
-        timeout: 100,
-        interval: 30,
-    };
+    options.messageTimeout = 100;
     options.reconnectInterval = 10;
     options.reconnectAttempts = 10;
     options.shouldReconnect = () => true;
@@ -401,7 +396,6 @@ test('Options#retryOnError controls whether a websocket should attempt to reconn
 test('Options#heartbeat, if provided, sends a message to the server at the specified interval', async () => {
     options.heartbeat = {
         message: 'ping',
-        timeout: 10000,
         interval: 500,
     };
     renderHook(() => useWebSocket(options));
@@ -411,26 +405,17 @@ test('Options#heartbeat, if provided, sends a message to the server at the speci
     await expect(server).toHaveReceivedMessages(["ping", "ping", "ping"]);
 });
 
-test('Options#heartbeat, if provided, close websocket if no message is received from server within specified timeout', async () => {
-    options.heartbeat = {
-        message: 'ping',
-        timeout: 1000,
-        interval: 400,
-    };
+test('Options#messageTimeout, if provided, close websocket if no message is received from server within specified timeout', async () => {
+    options.messageTimeout = 1000;
     const { result } = renderHook(() => useWebSocket(options));
 
     await server.connected;
     await sleep(1600);
-    expect(server.messages).toEqual(['ping', 'ping'])
     expect(result.current.readyState).toBe(WebSocket.CLOSED);
 });
 
-test('Options#heartbeat, if provided, do not close websocket if a message is received from server within specified timeout', async () => {
-    options.heartbeat = {
-        message: 'ping',
-        timeout: 1000,
-        interval: 500,
-    };
+test('Options#messageTimeout, if provided, do not close websocket if a message is received from server within specified timeout', async () => {
+    options.messageTimeout = 1000;
 
     const { result } = renderHook(() => useWebSocket(options));
 
@@ -443,33 +428,5 @@ test('Options#heartbeat, if provided, do not close websocket if a message is rec
     await sleep(500);
     server.send('ping')
     await sleep(500);
-    expect(result.current.readyState).toBe(WebSocket.OPEN);
-});
-
-test('Options#heartbeat, can handle case when interval is very close to timeout', async () => {
-    options.heartbeat = {
-        message: "ping",
-        returnMessage: "pong",
-        timeout: 1000,
-        interval: 800,
-    };
-
-    const { result } = renderHook(() => useWebSocket(options));
-
-    await server.connected;
-    await sleep(50);
-    expect(result.current.readyState).toEqual(ReadyState.OPEN);
-
-    result.current.sendMessage("token");
-    await sleep(50);
-    expect(server).toHaveReceivedMessages(["token"]);
-
-    server.send("authorized");
-    await sleep(50);
-
-    await sleep(850);
-    expect(server.messages).toEqual(["token", "ping"]);
-    server.send("pong");
-
     expect(result.current.readyState).toBe(WebSocket.OPEN);
 });

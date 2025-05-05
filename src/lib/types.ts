@@ -19,12 +19,14 @@ export interface Options {
   reconnectAttempts?: number;
   retryOnError?: boolean;
   heartbeat?: boolean | HeartbeatOptions;
+  // The connection is closed after not receiving a message for this many milliseconds
+  // Default: no timeout
+  messageTimeout?: number;
 }
 
 export type HeartbeatOptions = {
   message?: "ping" | "pong" | string | (() => string);
   returnMessage?: "ping" | "pong" | string;
-  timeout?: number;
   interval?: number;
 };
 
