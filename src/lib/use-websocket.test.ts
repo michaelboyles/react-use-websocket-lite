@@ -525,18 +525,6 @@ test('Options#retryOnError controls whether a websocket should attempt to reconn
     expect(onReconnectStopFn2).toHaveBeenCalled();
 });
 
-test.skip('Options#eventSourceOptions, if provided, instantiates an EventSource instead of a WebSocket', async () => {
-    options.eventSourceOptions = { withCredentials: true };
-
-    const {
-        result,
-        rerender
-    } = renderHook(() => useWebSocket(URL, options));
-    rerender();
-
-    waitFor(() => expect(result.current.getWebSocket() instanceof EventSource).toBe(true));
-});
-
 test.each([false, true])('Options#heartbeat, if provided, sends a message to the server at the specified interval and works when share is %s', async (shareOption) => {
     options.heartbeat = {
         message: 'ping',

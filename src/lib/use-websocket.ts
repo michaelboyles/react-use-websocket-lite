@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { flushSync } from 'react-dom';
-import { DEFAULT_OPTIONS, isEventSourceSupported, ReadyState } from './constants';
+import { DEFAULT_OPTIONS, ReadyState } from './constants';
 import { createOrJoinSocket } from './create-or-join';
 import { getUrl } from './get-url';
 import websocketWrapper from './proxy';
@@ -11,9 +11,7 @@ import {
   SendJsonMessage,
   WebSocketMessage,
   WebSocketHook,
-  WebSocketLike,
 } from './types';
-import { assertIsWebSocket } from './util';
 
 export const useWebSocket = (
   url: string | (() => string | Promise<string>) | null,
@@ -22,11 +20,11 @@ export const useWebSocket = (
 ): WebSocketHook => {
   const [readyState, setReadyState] = useState<ReadyStateState>({});
   const convertedUrl = useRef<string | null>(null);
-  const webSocketRef = useRef<WebSocketLike | null>(null);
+  const webSocketRef = useRef<WebSocket | null>(null);
   const startRef = useRef<() => void>(() => void 0);
   const reconnectCount = useRef<number>(0);
   const messageQueue = useRef<WebSocketMessage[]>([]);
-  const webSocketProxy = useRef<WebSocketLike | null>(null);
+  const webSocketProxy = useRef<WebSocket | null>(null);
   const optionsCache = useRef<Options>(options);
   optionsCache.current = options;
 
@@ -40,13 +38,7 @@ export const useWebSocket = (
   const stringifiedQueryParams = options.queryParams ? JSON.stringify(options.queryParams) : null;
 
   const sendMessage: SendMessage = useCallback((message, keep = true) => {
-    if (isEventSourceSupported && webSocketRef.current instanceof EventSource) {
-      console.warn('Unable to send a message from an eventSource');
-      return;
-    }
-  
     if (webSocketRef.current?.readyState === ReadyState.OPEN) {
-      assertIsWebSocket(webSocketRef.current, optionsCache.current.skipAssert);
       webSocketRef.current.send(message);
     } else if (keep) {
       messageQueue.current.push(message);
@@ -58,12 +50,11 @@ export const useWebSocket = (
   }, [sendMessage]);
   
   const getWebSocket = useCallback(() => {
-    if (optionsCache.current.share !== true || (isEventSourceSupported && webSocketRef.current instanceof EventSource)) {
+    if (optionsCache.current.share !== true) {
       return webSocketRef.current;
     }
 
     if (webSocketProxy.current === null && webSocketRef.current) {
-      assertIsWebSocket(webSocketRef.current, optionsCache.current.skipAssert);
       webSocketProxy.current = websocketWrapper(webSocketRef.current, startRef);
     }
 

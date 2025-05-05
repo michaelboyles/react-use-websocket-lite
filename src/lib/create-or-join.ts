@@ -1,7 +1,7 @@
 import { MutableRefObject } from 'react';
 import { sharedWebSockets } from './globals';
-import { Options, Subscriber, WebSocketLike } from './types';
-import { isEventSourceSupported, ReadyState, isReactNative } from './constants';
+import { Options, Subscriber } from './types';
+import { ReadyState } from './constants';
 import { attachListeners } from './attach-listener';
 import { attachSharedListeners } from './attach-shared-listeners';
 import { addSubscriber, removeSubscriber, hasSubscribers } from './manage-subscribers';
@@ -38,26 +38,16 @@ const cleanSubscribers = (
 };
 
 export const createOrJoinSocket = (
-  webSocketRef: MutableRefObject<WebSocketLike | null>,
+  webSocketRef: MutableRefObject<WebSocket | null>,
   url: string,
   setReadyState: (readyState: ReadyState) => void,
   optionsRef: MutableRefObject<Options>,
   startRef: MutableRefObject<() => void>,
   reconnectCount: MutableRefObject<number>,
 ): (() => void) => {
-  if (!isEventSourceSupported && optionsRef.current.eventSourceOptions) {
-    if (isReactNative) {
-      throw new Error('EventSource is not supported in ReactNative');
-    } else {
-      throw new Error('EventSource is not supported');
-    }
-  }
-
   if (optionsRef.current.share) {
     if (sharedWebSockets[url] === undefined) {
-      sharedWebSockets[url] = optionsRef.current.eventSourceOptions ?
-        new EventSource(url, optionsRef.current.eventSourceOptions) :
-        new WebSocket(url, optionsRef.current.protocols);
+      sharedWebSockets[url] = new WebSocket(url, optionsRef.current.protocols);
       webSocketRef.current = sharedWebSockets[url];
       setReadyState(ReadyState.CONNECTING);
       attachSharedListeners(
@@ -86,9 +76,7 @@ export const createOrJoinSocket = (
       setReadyState,
     );
   } else {
-    webSocketRef.current = optionsRef.current.eventSourceOptions ?
-      new EventSource(url, optionsRef.current.eventSourceOptions) :
-      new WebSocket(url, optionsRef.current.protocols);
+    webSocketRef.current = new WebSocket(url, optionsRef.current.protocols);
     setReadyState(ReadyState.CONNECTING);
     if (!webSocketRef.current) {
       throw new Error('WebSocket failed to be created');
