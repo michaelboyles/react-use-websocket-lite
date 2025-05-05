@@ -69,7 +69,7 @@ test('a function-promise based url works the same as a string-based url', async 
 test('a function-promise based url retries until it resolves if retryOnError is true', async () => {
     let attemptsUntilSuccess = 2;
     options.retryOnError = true;
-    options.reconnectAttempts = 3;
+    options.maxReconnectAttempts = 3;
     options.reconnectInterval = 500;
     const onReconnectStopFn1 = vi.fn();
     options.onReconnectStop = onReconnectStopFn1;
@@ -104,7 +104,7 @@ test('a function-promise based url retries until it resolves if retryOnError is 
 test('a function-promise based url stops retrying if it has exceeded reconnectAttempts', async () => {
     let attemptsUntilSuccess = 3;
     options.retryOnError = true;
-    options.reconnectAttempts = 2;
+    options.maxReconnectAttempts = 2;
     options.reconnectInterval = 500;
     const onReconnectStopFn1 = vi.fn();
     options.onReconnectStop = onReconnectStopFn1;
@@ -139,7 +139,7 @@ test('a function-promise based url stops retrying if it has exceeded reconnectAt
 test('a function-promise based url does not retry if retryOnError is false', async () => {
     let attemptsUntilSuccess = 2;
     options.retryOnError = false;
-    options.reconnectAttempts = 3;
+    options.maxReconnectAttempts = 3;
     options.reconnectInterval = 500;
     const onReconnectStopFn1 = vi.fn();
     options.onReconnectStop = onReconnectStopFn1;
@@ -218,7 +218,7 @@ test('websocket is closed when the component unmounts', async () => {
 test('Websocket can reconnect after timeout', async () => {
     options.messageTimeout = 100;
     options.reconnectInterval = 10;
-    options.reconnectAttempts = 10;
+    options.maxReconnectAttempts = 10;
     options.shouldReconnect = () => true;
 
     const {
@@ -338,7 +338,7 @@ test('Options#shouldReconnect controls whether a closed websocket should attempt
 
 test('Options#onReconnectStop is called when the websocket exceeds maximum reconnect attempts provided in options, or 20 by default', async () => {
     options.shouldReconnect = () => true;
-    options.reconnectAttempts = 3;
+    options.maxReconnectAttempts = 3;
     options.reconnectInterval = 500; //Default interval is too long for tests
     const onReconnectStopFn = vi.fn((numAttempts: number) => { });
     options.onReconnectStop = onReconnectStopFn;
@@ -356,7 +356,7 @@ test('Options#onReconnectStop is called when the websocket exceeds maximum recon
 
 test('Options#retryOnError controls whether a websocket should attempt to reconnect after an error event', async () => {
     options.retryOnError = false;
-    options.reconnectAttempts = 3;
+    options.maxReconnectAttempts = 3;
     options.reconnectInterval = 500;
     const onReconnectStopFn1 = vi.fn();
     options.onReconnectStop = onReconnectStopFn1;

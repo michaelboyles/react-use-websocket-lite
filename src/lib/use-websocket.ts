@@ -1,6 +1,6 @@
 import { MutableRefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT, ReadyState } from './constants';
+import { DEFAULT_RECONNECT_INTERVAL_MS, ReadyState } from './constants';
 import { Options, ReadyStateState, SendMessage, WebSocketHook, WebSocketMessage, } from './types';
 import { attachListeners } from "./attach-listener";
 
@@ -133,8 +133,8 @@ async function getUrl(
   }
   catch (e) {
     if (optionsRef.current.retryOnError) {
-      const reconnectLimit = optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
-      if (retriedAttempts < reconnectLimit) {
+      const maxReconnectAttempts = optionsRef.current.maxReconnectAttempts;
+      if (!maxReconnectAttempts || retriedAttempts < maxReconnectAttempts) {
         const nextReconnectInterval = typeof optionsRef.current.reconnectInterval === 'function' ?
             optionsRef.current.reconnectInterval(retriedAttempts) :
             optionsRef.current.reconnectInterval;

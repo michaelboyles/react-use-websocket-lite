@@ -1,5 +1,5 @@
 import { MutableRefObject, RefObject } from 'react';
-import { DEFAULT_RECONNECT_INTERVAL_MS, DEFAULT_RECONNECT_LIMIT, ReadyState } from './constants';
+import { DEFAULT_RECONNECT_INTERVAL_MS, ReadyState } from './constants';
 import { Options } from './types';
 
 export function attachListeners(
@@ -57,9 +57,9 @@ function reconnectIfBelowAttemptLimit(
     reconnectCount: MutableRefObject<number>,
     reconnect: () => void
 ) {
-  const reconnectAttempts = optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
+  const maxReconnectAttempts = optionsRef.current.maxReconnectAttempts;
 
-  if (reconnectCount.current < reconnectAttempts) {
+  if (!maxReconnectAttempts || reconnectCount.current < maxReconnectAttempts) {
     const nextReconnectInterval = typeof optionsRef.current.reconnectInterval === 'function' ?
         optionsRef.current.reconnectInterval(reconnectCount.current) :
         optionsRef.current.reconnectInterval;
@@ -70,8 +70,8 @@ function reconnectIfBelowAttemptLimit(
     }, nextReconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS);
   }
   else {
-    optionsRef.current.onReconnectStop?.(reconnectAttempts);
-    console.warn(`Max reconnect attempts of ${reconnectAttempts} exceeded`);
+    optionsRef.current.onReconnectStop?.(maxReconnectAttempts);
+    console.warn(`Max reconnect attempts of ${maxReconnectAttempts} exceeded`);
   }
 }
 
