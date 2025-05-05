@@ -8,7 +8,6 @@ import {
   Options,
   ReadyStateState,
   SendMessage,
-  SendJsonMessage,
   WebSocketMessage,
   WebSocketHook,
 } from './types';
@@ -44,10 +43,6 @@ export const useWebSocket = (
       messageQueue.current.push(message);
     }
   }, []);
-
-  const sendJsonMessage: SendJsonMessage = useCallback((message, keep = true) => {
-    sendMessage(JSON.stringify(message), keep);
-  }, [sendMessage]);
   
   const getWebSocket = useCallback(() => {
     if (optionsCache.current.share !== true) {
@@ -136,7 +131,6 @@ export const useWebSocket = (
 
   return {
     sendMessage,
-    sendJsonMessage,
     readyState: readyStateFromUrl,
     getWebSocket,
   };

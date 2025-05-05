@@ -194,16 +194,6 @@ test('if sendMessage is called before the websocket opens, the message will be q
     await expect(server).toReceiveMessage("Hello");
 })
 
-test('sendJsonMessage allows component to pass a json object which is serialized and sent to server', async () => {
-    const {
-        result,
-    } = renderHook(() => useWebSocket(URL, options))
-    await server.connected;
-    result.current.sendJsonMessage({ name: 'Bob' });
-
-    await expect(server).toReceiveMessage(JSON.stringify({ name: 'Bob' }));
-})
-
 test('getWebSocket returns the underlying websocket if unshared', async () => {
     const {
         result
