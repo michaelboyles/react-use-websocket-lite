@@ -6,7 +6,8 @@ export interface QueryParams {
 }
 
 export interface Options {
-  fromSocketIO?: boolean;
+  url: string | (() => string | Promise<string>) | null
+  connect?: boolean
   queryParams?: QueryParams;
   protocols?: string | string[];
   share?: boolean;
@@ -19,7 +20,6 @@ export interface Options {
   reconnectInterval?: number | ((lastAttemptNumber: number) => number);
   reconnectAttempts?: number;
   retryOnError?: boolean;
-  skipAssert?: boolean;
   heartbeat?: boolean | HeartbeatOptions;
 }
 

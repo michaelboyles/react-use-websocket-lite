@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { flushSync } from 'react-dom';
-import { DEFAULT_OPTIONS, ReadyState } from './constants';
+import { ReadyState } from './constants';
 import { createOrJoinSocket } from './create-or-join';
 import { getUrl } from './get-url';
 import websocketWrapper from './proxy';
@@ -12,11 +12,9 @@ import {
   WebSocketHook,
 } from './types';
 
-export const useWebSocket = (
-  url: string | (() => string | Promise<string>) | null,
-  options: Options = DEFAULT_OPTIONS,
-  connect: boolean = true,
-): WebSocketHook => {
+export const useWebSocket = (options: Options): WebSocketHook => {
+  const { url, connect = true } = options;
+
   const [readyState, setReadyState] = useState<ReadyStateState>({});
   const convertedUrl = useRef<string | null>(null);
   const webSocketRef = useRef<WebSocket | null>(null);

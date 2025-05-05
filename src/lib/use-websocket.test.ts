@@ -8,7 +8,7 @@ import { ReadyState } from './constants';
 let server: WS;
 const URL = 'ws://localhost:1234';
 const noop = () => { };
-const DEFAULT_OPTIONS: Options = {};
+const DEFAULT_OPTIONS: Options = { url: URL };
 let options: Options;
 const sleep = (duration: number): Promise<void> => new Promise(resolve => setTimeout(() => resolve(), duration));
 console.error = noop;
@@ -22,22 +22,16 @@ afterEach(() => {
     WS.clean();
 });
 
-test('useWebsocket should work with just a url provided', () => {
-    expect(() => {
-        renderHook(() => useWebSocket(URL));
-    }).not.toThrow();
-})
-
 test('readyState changes across readyState transitions', async () => {
     const {
         result,
         rerender,
-    } = renderHook(({ initialValue }) => useWebSocket(URL, options, initialValue), {
-        initialProps: { initialValue: false }
+    } = renderHook(({ connect }) => useWebSocket({ ...options, connect }), {
+        initialProps: { connect: false }
     })
 
     expect(result.current.readyState).toEqual(ReadyState.UNINSTANTIATED);
-    rerender({ initialValue: true });
+    rerender({ connect: true });
 
     expect(result.current.readyState).toEqual(ReadyState.CONNECTING);
     await server.connected;
@@ -57,12 +51,12 @@ test('a function-promise based url works the same as a string-based url', async 
     const {
         result,
         rerender,
-    } = renderHook(({ initialValue }) => useWebSocket(getUrl, options, initialValue), {
-        initialProps: { initialValue: false }
+    } = renderHook(({ connect }) => useWebSocket({ ...options, url: getUrl, connect }), {
+        initialProps: { connect: false }
     })
 
     expect(result.current.readyState).toEqual(ReadyState.UNINSTANTIATED);
-    rerender({ initialValue: true });
+    rerender({ connect: true });
 
     expect(result.current.readyState).toEqual(ReadyState.CONNECTING);
     await server.connected;
@@ -94,12 +88,12 @@ test('a function-promise based url retries until it resolves if retryOnError is 
     const {
         result,
         rerender,
-    } = renderHook(({ initialValue }) => useWebSocket(getUrl, options, initialValue), {
-        initialProps: { initialValue: false }
+    } = renderHook(({ connect }) => useWebSocket({...options, url: getUrl, connect }), {
+        initialProps: { connect: false }
     });
 
     expect(result.current.readyState).toEqual(ReadyState.UNINSTANTIATED);
-    rerender({ initialValue: true });
+    rerender({ connect: true });
     await sleep(1000);
     expect(result.current.readyState).toEqual(ReadyState.CONNECTING);
     await sleep(1000);
@@ -129,12 +123,12 @@ test('a function-promise based url stops retrying if it has exceeded reconnectAt
     const {
         result,
         rerender,
-    } = renderHook(({ initialValue }) => useWebSocket(getUrl, options, initialValue), {
-        initialProps: { initialValue: false }
+    } = renderHook(({ connect }) => useWebSocket({...options, url: getUrl, connect }), {
+        initialProps: { connect: false }
     });
 
     expect(result.current.readyState).toEqual(ReadyState.UNINSTANTIATED);
-    rerender({ initialValue: true });
+    rerender({ connect: true });
     await sleep(1000);
     expect(result.current.readyState).toEqual(ReadyState.CONNECTING);
     await sleep(1000);
@@ -164,12 +158,12 @@ test('a function-promise based url does not retry if retryOnError is false', asy
     const {
         result,
         rerender,
-    } = renderHook(({ initialValue }) => useWebSocket(getUrl, options, initialValue), {
-        initialProps: { initialValue: false }
+    } = renderHook(({ connect }) => useWebSocket({...options, url: getUrl, connect }), {
+        initialProps: { connect: false }
     });
 
     expect(result.current.readyState).toEqual(ReadyState.UNINSTANTIATED);
-    rerender({ initialValue: true });
+    rerender({ connect: true });
     await sleep(1000);
     expect(result.current.readyState).toEqual(ReadyState.CLOSED);
     await sleep(1000);
@@ -179,7 +173,7 @@ test('a function-promise based url does not retry if retryOnError is false', asy
 test('sendMessage passes message to websocket and sends to server', async () => {
     const {
         result,
-    } = renderHook(() => useWebSocket(URL, options))
+    } = renderHook(() => useWebSocket(options))
     await server.connected;
     result.current.sendMessage("Hello");
     await expect(server).toReceiveMessage("Hello");
@@ -188,7 +182,7 @@ test('sendMessage passes message to websocket and sends to server', async () => 
 test('if sendMessage is called before the websocket opens, the message will be queued and sent when the websocket opens', async () => {
     const {
         result,
-    } = renderHook(() => useWebSocket(URL, options))
+    } = renderHook(() => useWebSocket(options))
     expect(result.current.readyState).not.toEqual(ReadyState.OPEN);
     result.current.sendMessage("Hello");
     await expect(server).toReceiveMessage("Hello");
@@ -197,7 +191,7 @@ test('if sendMessage is called before the websocket opens, the message will be q
 test('getWebSocket returns the underlying websocket if unshared', async () => {
     const {
         result
-    } = renderHook(() => useWebSocket(URL, options))
+    } = renderHook(() => useWebSocket(options))
     await server.connected;
     const ws = result.current.getWebSocket();
 
@@ -211,7 +205,7 @@ test('getWebSocket returns a protected websocket when shared', async () => {
     options.share = true;
     const {
         result,
-    } = renderHook(() => useWebSocket(URL, options))
+    } = renderHook(() => useWebSocket(options))
     await server.connected;
     const ws = result.current.getWebSocket();
 
@@ -223,7 +217,7 @@ test('websocket is closed when the component unmounts', async () => {
     const {
         result,
         unmount,
-    } = renderHook(() => useWebSocket(URL, options))
+    } = renderHook(() => useWebSocket(options))
     await server.connected;
     const ws = result.current.getWebSocket();
 
@@ -236,17 +230,17 @@ test('websocket is closed when the component unmounts', async () => {
 test('shared websockets receive updates as if unshared', async () => {
     const {
         result: component1,
-    } = renderHook(() => useWebSocket(URL, options))
+    } = renderHook(() => useWebSocket(options))
     await server.connected;
 
     const {
         result: component2,
-    } = renderHook(() => useWebSocket(URL, options))
+    } = renderHook(() => useWebSocket(options))
     await server.connected;
 
     const {
         result: component3,
-    } = renderHook(() => useWebSocket(URL, options))
+    } = renderHook(() => useWebSocket(options))
     await server.connected;
 
 
@@ -267,7 +261,7 @@ test('shared=false websocket can re-connect after timeout', async () => {
 
     const {
         result: component1,
-    } = renderHook(() => useWebSocket(URL, options))
+    } = renderHook(() => useWebSocket(options))
 
     await server.connected;
     expect(component1.current.getWebSocket()?.readyState).toBe(WebSocket.OPEN);
@@ -293,7 +287,7 @@ test('shared=true websocket can re-connect after timeout', async () => {
 
     const {
         result: component1,
-    } = renderHook(() => useWebSocket(URL, options))
+    } = renderHook(() => useWebSocket(options))
 
     await server.connected;
     expect(component1.current.getWebSocket()?.readyState).toBe(WebSocket.OPEN);
@@ -307,7 +301,7 @@ test('shared=true websocket can re-connect after timeout', async () => {
 
 test('shared websockets each have callbacks invoked as if unshared', async () => {
     const component1OnClose = vi.fn(() => { });
-    renderHook(() => useWebSocket(URL, {
+    renderHook(() => useWebSocket({
         ...options,
         onClose: component1OnClose,
     }));
@@ -315,7 +309,7 @@ test('shared websockets each have callbacks invoked as if unshared', async () =>
     await server.connected;
 
     const component2OnClose = vi.fn(() => { });
-    renderHook(() => useWebSocket(URL, {
+    renderHook(() => useWebSocket({
         ...options,
         onClose: component2OnClose,
     }));
@@ -323,7 +317,7 @@ test('shared websockets each have callbacks invoked as if unshared', async () =>
     await server.connected;
 
     const component3OnClose = vi.fn(() => { });
-    renderHook(() => useWebSocket(URL, {
+    renderHook(() => useWebSocket({
         ...options,
         onClose: component3OnClose,
     }));
@@ -347,7 +341,7 @@ test('Options#queryParams append object-based params as string to url', async ()
 
     const {
         result
-    } = renderHook(() => useWebSocket(URL, options));
+    } = renderHook(() => useWebSocket(options));
 
     await waitFor(() => {
         const ws = result.current.getWebSocket();
@@ -360,7 +354,7 @@ test('Options#protocols pass the value on to the instantiated WebSocket', async 
 
     const {
         result
-    } = renderHook(() => useWebSocket(URL, options));
+    } = renderHook(() => useWebSocket(options));
 
     await waitFor(() => {
         const ws = result.current.getWebSocket();
@@ -376,9 +370,9 @@ test('Options#share subscribes multiple components to a single WebSocket, so lon
     const onConnectionFn = vi.fn();
     server.on('connection', onConnectionFn);
 
-    renderHook(() => useWebSocket(URL, options));
-    renderHook(() => useWebSocket(URL, options));
-    renderHook(() => useWebSocket(URL, options));
+    renderHook(() => useWebSocket(options));
+    renderHook(() => useWebSocket(options));
+    renderHook(() => useWebSocket(options));
 
     await sleep(500);
 
@@ -389,9 +383,9 @@ test('if Options#share is not true, multiple websockets will be opened for the s
     const onConnectionFn = vi.fn();
     server.on('connection', onConnectionFn);
 
-    renderHook(() => useWebSocket(URL, options));
-    renderHook(() => useWebSocket(URL, options));
-    renderHook(() => useWebSocket(URL, options));
+    renderHook(() => useWebSocket(options));
+    renderHook(() => useWebSocket(options));
+    renderHook(() => useWebSocket(options));
 
     await sleep(500);
 
@@ -402,7 +396,7 @@ test('Options#onOpen is called with the open event when the websocket connection
     const onOpenFn = vi.fn();
     options.onOpen = onOpenFn;
 
-    renderHook(() => useWebSocket(URL, options));
+    renderHook(() => useWebSocket(options));
     await server.connected;
     expect(onOpenFn).toHaveBeenCalledTimes(1);
     expect(onOpenFn.mock.calls[0][0].constructor.name).toBe('Event');
@@ -412,7 +406,7 @@ test('Options#onClose is called with the close event when the websocket connecti
     const onCloseFn = vi.fn();
     options.onClose = onCloseFn;
 
-    renderHook(() => useWebSocket(URL, options));
+    renderHook(() => useWebSocket(options));
     await server.connected;
 
     server.close();
@@ -426,7 +420,7 @@ test('Options#onMessage is called with the MessageEvent when the websocket recei
     const onMessageFn = vi.fn();
     options.onMessage = onMessageFn;
 
-    renderHook(() => useWebSocket(URL, options));
+    renderHook(() => useWebSocket(options));
     await server.connected;
 
     server.send('Hello');
@@ -441,7 +435,7 @@ test('Options#onError is called when the websocket connection errors out', async
     const onErrorFn = vi.fn();
     options.onError = onErrorFn;
 
-    renderHook(() => useWebSocket(URL, options));
+    renderHook(() => useWebSocket(options));
     await server.connected;
 
     server.error();
@@ -459,14 +453,14 @@ test('Options#shouldReconnect controls whether a closed websocket should attempt
     const onConnectionFn = vi.fn((ws: any) => ws.close());
     server.on('connection', onConnectionFn);
 
-    renderHook(() => useWebSocket(URL, options));
+    renderHook(() => useWebSocket(options));
     await sleep(600);//100ms buffer to avoid race condition
 
     expect(onConnectionFn).toHaveBeenCalledTimes(1);
 
     options.shouldReconnect = () => true;
 
-    renderHook(() => useWebSocket(URL, options));
+    renderHook(() => useWebSocket(options));
     await sleep(600);
     expect(onConnectionFn).toHaveBeenCalledTimes(3);
 });
@@ -478,7 +472,7 @@ test('Options#onReconnectStop is called when the websocket exceeds maximum recon
     const onReconnectStopFn = vi.fn((numAttempts: number) => { });
     options.onReconnectStop = onReconnectStopFn;
 
-    renderHook(() => useWebSocket(URL, options));
+    renderHook(() => useWebSocket(options));
     await server.connected;
     server.close();
     expect(onReconnectStopFn).not.toHaveBeenCalled();
@@ -496,7 +490,7 @@ test('Options#retryOnError controls whether a websocket should attempt to reconn
     const onReconnectStopFn1 = vi.fn();
     options.onReconnectStop = onReconnectStopFn1;
 
-    renderHook(() => useWebSocket(URL, options));
+    renderHook(() => useWebSocket(options));
     await server.connected;
 
     server.error();
@@ -507,7 +501,7 @@ test('Options#retryOnError controls whether a websocket should attempt to reconn
     const onReconnectStopFn2 = vi.fn();
     options.onReconnectStop = onReconnectStopFn2;
 
-    renderHook(() => useWebSocket(URL, options));
+    renderHook(() => useWebSocket(options));
     await server.connected;
 
     server.error();
@@ -523,10 +517,10 @@ test.each([false, true])('Options#heartbeat, if provided, sends a message to the
     };
     options.share = shareOption;
 
-    renderHook(() => useWebSocket(URL, options));
+    renderHook(() => useWebSocket(options));
 
     if (shareOption) {
-        renderHook(() => useWebSocket(URL, options));
+        renderHook(() => useWebSocket(options));
     }
     await server.connected;
     await sleep(1600);
@@ -543,10 +537,10 @@ test.each([false, true])('Options#heartbeat, if provided, close websocket if no 
 
     const {
         result,
-    } = renderHook(() => useWebSocket(URL, options));
+    } = renderHook(() => useWebSocket(options));
 
     if (shareOption) {
-        renderHook(() => useWebSocket(URL, options));
+        renderHook(() => useWebSocket(options));
     }
     await server.connected;
     await sleep(1600);
@@ -564,10 +558,10 @@ test.each([false, true])('Options#heartbeat, if provided, do not close websocket
 
     const {
         result,
-    } = renderHook(() => useWebSocket(URL, options));
+    } = renderHook(() => useWebSocket(options));
 
     if (shareOption) {
-        renderHook(() => useWebSocket(URL, options));
+        renderHook(() => useWebSocket(options));
     }
 
     await server.connected;
@@ -591,10 +585,10 @@ test.each([false, true])('Options#heartbeat, can handle case when interval is ve
         };
         options.share = shareOption;
 
-        const { result } = renderHook(() => useWebSocket(URL, options));
+        const { result } = renderHook(() => useWebSocket(options));
 
         if (shareOption) {
-            renderHook(() => useWebSocket(URL, options));
+            renderHook(() => useWebSocket(options));
         }
 
         await server.connected;
