@@ -1,15 +1,9 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { ReadyState } from './constants';
 import { createOrJoinSocket } from './create-or-join';
 import { getUrl } from './get-url';
-import {
-  Options,
-  ReadyStateState,
-  SendMessage,
-  WebSocketMessage,
-  WebSocketHook,
-} from './types';
+import { Options, ReadyStateState, SendMessage, WebSocketHook, WebSocketMessage, } from './types';
 
 export const useWebSocket = (options: Options): WebSocketHook => {
   const { url, connect = true } = options;
@@ -66,10 +60,12 @@ export const useWebSocket = (options: Options): WebSocketHook => {
   
         const protectedSetReadyState = (state: ReadyState) => {
           if (!expectClose) {
-            flushSync(() => setReadyState(prev => ({
-              ...prev,
-              ...(convertedUrl.current && {[convertedUrl.current]: state}),
-            })));
+            flushSync(() => setReadyState(prev => {
+              if (convertedUrl.current && prev[convertedUrl.current] !== state) {
+                return { ...prev, [convertedUrl.current]: state };
+              }
+              return prev;
+            }));
           }
         };
 
@@ -100,10 +96,12 @@ export const useWebSocket = (options: Options): WebSocketHook => {
       };
     } else if (url === null || connect === false) {
       reconnectCount.current = 0; // reset reconnection attempts
-      setReadyState(prev => ({
-        ...prev,
-        ...(convertedUrl.current && {[convertedUrl.current]: ReadyState.CLOSED}),
-      }));
+      setReadyState(prev => {
+        if (convertedUrl.current && prev[convertedUrl.current] !== ReadyState.CLOSED) {
+          return { ...prev, [convertedUrl.current]: ReadyState.CLOSED }
+        }
+        return prev;
+      });
     }
   }, [url, connect, stringifiedQueryParams, sendMessage]);
 
