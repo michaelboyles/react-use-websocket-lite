@@ -10,6 +10,7 @@ export function attachListeners(
     reconnectCount: MutableRefObject<number>,
 ): () => void {
   let messageTimeoutMonitor: MessageTimeoutMonitor | undefined;
+  let reconnectTimeout: number | undefined;
 
   webSocketInstance.onmessage = message => {
     messageTimeoutMonitor?.markMessageReceived();
@@ -24,29 +25,29 @@ export function attachListeners(
     startHeartbeats(webSocketInstance, optionsRef);
   };
 
-  let reconnectTimeout: number | undefined;
   webSocketInstance.onclose = event => {
     optionsRef.current.onClose?.(event);
     setReadyState(ReadyState.CLOSED);
-    if (optionsRef.current.shouldReconnect?.(event)) {
+    if (reconnectTimeout === undefined && optionsRef.current.shouldReconnect?.(event)) {
       reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
     }
     messageTimeoutMonitor?.stop();
   };
 
-  let reconnectTimeout2: number | undefined;
   webSocketInstance.onerror = error => {
     optionsRef.current.onError?.(error);
 
-    if (optionsRef.current.retryOnError) {
-      reconnectTimeout2 = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
+    if (reconnectTimeout === undefined && optionsRef.current.retryOnError) {
+      reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
     }
   };
 
   return () => {
     setReadyState(ReadyState.CLOSING);
-    reconnectTimeout && window.clearTimeout(reconnectTimeout);
-    reconnectTimeout2 && window.clearTimeout(reconnectTimeout2);
+    if (reconnectTimeout !== undefined) {
+      window.clearTimeout(reconnectTimeout);
+      reconnectTimeout = undefined;
+    }
     webSocketInstance.close();
   };
 }
