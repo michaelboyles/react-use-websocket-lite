@@ -23,22 +23,6 @@ const bindMessageHandler = (
       if (subscriber.optionsRef.current.onMessage) {
         subscriber.optionsRef.current.onMessage(message);
       }
-
-      if (
-        typeof subscriber.optionsRef.current.filter === 'function' &&
-        subscriber.optionsRef.current.filter(message) !== true
-      ) {
-        return;
-      }
-
-      if (
-        heartbeatOptions &&
-        typeof heartbeatOptions !== "boolean" &&
-        heartbeatOptions?.returnMessage === message.data
-      )
-        return;
-
-      subscriber.setLastMessage(message);
     });
   };
 };

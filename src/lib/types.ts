@@ -18,7 +18,6 @@ export interface Options {
   shouldReconnect?: (event: WebSocketEventMap['close']) => boolean;
   reconnectInterval?: number | ((lastAttemptNumber: number) => number);
   reconnectAttempts?: number;
-  filter?: (message: WebSocketEventMap['message']) => boolean;
   retryOnError?: boolean;
   eventSourceOptions?: EventSourceOnly;
   skipAssert?: boolean;
@@ -51,28 +50,24 @@ export type WebSocketMessage = string | ArrayBuffer | SharedArrayBuffer | Blob |
 export type SendMessage = (message: WebSocketMessage, keep?: boolean) => void;
 export type SendJsonMessage = <T = unknown>(jsonMessage: T, keep?: boolean) => void;
 
-export type Subscriber<T = WebSocketEventMap['message']> = {
-  setLastMessage: (message: T) => void,
+export type Subscriber = {
   setReadyState: (readyState: ReadyState) => void,
   optionsRef: MutableRefObject<Options>,
   reconnectCount: MutableRefObject<number>,
   reconnect: MutableRefObject<() => void>,
 }
 
-export type WebSocketHook<T = unknown, P = WebSocketEventMap['message'] | null> = {
+export type WebSocketHook = {
   sendMessage: SendMessage,
   sendJsonMessage: SendJsonMessage,
-  lastMessage: P,
-  lastJsonMessage: T,
   readyState: ReadyState,
   getWebSocket: () => (WebSocketLike | null),
 }
 
 export type EventSourceHook = Omit<
-  WebSocketHook<EventSourceEventMap['message']>,
-  'sendMessage' | 'sendJsonMessage' | 'lastMessage' | 'lastJsonMessage' | 'getWebSocket'
+  WebSocketHook,
+  'sendMessage' | 'sendJsonMessage' | 'getWebSocket'
 > & {
-  lastEvent: EventSourceEventMap['message'] | null,
   getEventSource: () => (WebSocketLike | null),
 }
 

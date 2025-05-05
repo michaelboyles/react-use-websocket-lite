@@ -178,32 +178,6 @@ test('a function-promise based url does not retry if retryOnError is false', asy
     expect(options.onReconnectStop).not.toHaveBeenCalled();
 });
 
-test('lastMessage updates when websocket receives a message', async () => {
-    const {
-        result,
-    } = renderHook(() => useWebSocket(URL, options))
-    await server.connected;
-    expect(result.current.lastMessage).toBe(null);
-    server.send('Hello');
-    expect(result.current.lastMessage?.data).toBe('Hello');
-    server.send('There');
-    server.send('Friend');
-    expect(result.current.lastMessage?.data).toBe('Friend');
-});
-
-test('lastJsonMessage updates with a json object when websocket receives a message', async () => {
-    const jsonParseSpy = vi.spyOn(JSON, 'parse');
-    const {
-        result,
-    } = renderHook(() => useWebSocket<{ name: string }>(URL, options))
-    await server.connected;
-    expect(result.current.lastJsonMessage).toBe(null);
-    const serverMessage = JSON.stringify({ name: 'Bob' });
-    server.send(serverMessage);
-    expect(result.current.lastJsonMessage.name).toBe('Bob');
-    expect(jsonParseSpy).toHaveBeenCalledWith(serverMessage);
-});
-
 test('sendMessage passes message to websocket and sends to server', async () => {
     const {
         result,
@@ -289,10 +263,6 @@ test('shared websockets receive updates as if unshared', async () => {
 
 
     server.send('Hello all');
-
-    expect(component1.current.lastMessage?.data).toBe('Hello all');
-    expect(component2.current.lastMessage?.data).toBe('Hello all');
-    expect(component3.current.lastMessage?.data).toBe('Hello all');
 })
 
 test('shared=false websocket can re-connect after timeout', async () => {
@@ -306,7 +276,6 @@ test('shared=false websocket can re-connect after timeout', async () => {
     options.reconnectInterval = 10;
     options.reconnectAttempts = 10;
     options.shouldReconnect = () => true;
-    options.filter = event => event.data !== '"pong"';
 
     const {
         result: component1,
@@ -333,7 +302,6 @@ test('shared=true websocket can re-connect after timeout', async () => {
     options.reconnectInterval = 10;
     options.reconnectAttempts = 10;
     options.shouldReconnect = () => true;
-    options.filter = event => event.data !== '"pong"';
 
     const {
         result: component1,
@@ -546,17 +514,6 @@ test('Options#onReconnectStop is called when the websocket exceeds maximum recon
     expect(onReconnectStopFn.mock.calls[0][0]).toBe(3);
 });
 
-test('Options#filter accepts all incoming messages, but only where it returns true will the message update a component', async () => {
-    options.filter = () => false;
-
-    const { result } = renderHook(() => useWebSocket(URL, options));
-    await server.connected;
-    server.send('Hello');
-    await sleep(500);
-
-    expect(result.current.lastMessage).toBeNull();
-});
-
 test('Options#retryOnError controls whether a websocket should attempt to reconnect after an error event', async () => {
     options.retryOnError = false;
     options.reconnectAttempts = 3;
@@ -662,30 +619,6 @@ test.each([false, true])('Options#heartbeat, if provided, do not close websocket
     expect(result.current.readyState).toBe(WebSocket.OPEN);
 });
 
-test.each([false, true])('Options#heartbeat, if provided, lastMessage is updated if server message does not matches the returnMessage property of heartbeatOptions and works when share is %s', async (shareOption) => {
-    options.heartbeat = {
-        message: 'ping',
-        returnMessage: 'pong',
-        timeout: 1000,
-        interval: 500,
-    };
-    options.share = shareOption;
-
-    const {
-        result,
-    } = renderHook(() => useWebSocket(URL, options));
-
-    if (shareOption) {
-        renderHook(() => useWebSocket(URL, options));
-    }
-
-    await server.connected;
-    server.send('pong');
-    expect(result.current.lastMessage?.data).toBe(undefined);
-    server.send('ping');
-    expect(result.current.lastMessage?.data).toBe('ping');
-});
-
 test.each([false, true])('Options#heartbeat, can handle case when interval is very close to timeout', async (shareOption) => {
         options.heartbeat = {
             message: "ping",
@@ -711,7 +644,6 @@ test.each([false, true])('Options#heartbeat, can handle case when interval is ve
 
         server.send("authorized");
         await sleep(50);
-        expect(result.current.lastMessage?.data).toEqual("authorized");
 
         await sleep(850);
         // it does not matter is it shared mode or not, in both cases only one timer is used that means only one ping message is sent for all subscribers
