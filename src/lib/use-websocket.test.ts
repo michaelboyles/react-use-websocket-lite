@@ -235,19 +235,6 @@ test('Websocket can reconnect after timeout', async () => {
     expect(component1.current.getWebSocket()?.readyState).toBe(WebSocket.OPEN);
 });
 
-test('Options#queryParams append object-based params as string to url', async () => {
-    options.queryParams = { type: 'user', id: 5 };
-
-    const {
-        result
-    } = renderHook(() => useWebSocket(options));
-
-    await waitFor(() => {
-        const ws = result.current.getWebSocket();
-        expect(ws?.url).toEqual(`${URL}/?type=user&id=5`);
-    });
-});
-
 test('Options#protocols pass the value on to the instantiated WebSocket', async () => {
     options.protocols = 'chat';
 

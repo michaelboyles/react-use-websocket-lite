@@ -1,13 +1,8 @@
 import { ReadyState } from './constants';
 
-export interface QueryParams {
-  [key: string]: string | number;
-}
-
 export interface Options {
   url: string | (() => string | Promise<string>) | null
   connect?: boolean
-  queryParams?: QueryParams;
   protocols?: string | string[];
   onOpen?: (event: WebSocketEventMap['open']) => void;
   onClose?: (event: WebSocketEventMap['close']) => void;

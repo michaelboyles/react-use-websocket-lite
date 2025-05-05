@@ -24,8 +24,6 @@ export const useWebSocket = (options: Options): WebSocketHook => {
         ReadyState.CONNECTING :
         ReadyState.UNINSTANTIATED;
 
-  const stringifiedQueryParams = options.queryParams ? JSON.stringify(options.queryParams) : null;
-
   const sendMessage: SendMessage = useCallback((message, keep = true) => {
     if (webSocketRef.current?.readyState === ReadyState.OPEN) {
       webSocketRef.current.send(message);
@@ -103,7 +101,7 @@ export const useWebSocket = (options: Options): WebSocketHook => {
         return prev;
       });
     }
-  }, [url, connect, stringifiedQueryParams, sendMessage]);
+  }, [url, connect, sendMessage]);
 
   useEffect(() => {
     if (readyStateFromUrl === ReadyState.OPEN) {
