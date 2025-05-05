@@ -188,7 +188,7 @@ test('if sendMessage is called before the websocket opens, the message will be q
     await expect(server).toReceiveMessage("Hello");
 })
 
-test('getWebSocket returns the underlying websocket if unshared', async () => {
+test('getWebSocket returns the underlying websocket', async () => {
     const {
         result
     } = renderHook(() => useWebSocket(options))
@@ -199,18 +199,6 @@ test('getWebSocket returns the underlying websocket if unshared', async () => {
 
     ws?.close();
     await waitFor(() => expect(result.current.readyState).toBe(ReadyState.CLOSED));
-})
-
-test('getWebSocket returns a protected websocket when shared', async () => {
-    options.share = true;
-    const {
-        result,
-    } = renderHook(() => useWebSocket(options))
-    await server.connected;
-    const ws = result.current.getWebSocket();
-
-    ws?.close();
-    await expect(result.current.readyState).toBe(ReadyState.OPEN);
 })
 
 test('websocket is closed when the component unmounts', async () => {
@@ -227,34 +215,13 @@ test('websocket is closed when the component unmounts', async () => {
     expect(ws?.readyState).toBe(ReadyState.CLOSED);
 })
 
-test('shared websockets receive updates as if unshared', async () => {
-    const {
-        result: component1,
-    } = renderHook(() => useWebSocket(options))
-    await server.connected;
-
-    const {
-        result: component2,
-    } = renderHook(() => useWebSocket(options))
-    await server.connected;
-
-    const {
-        result: component3,
-    } = renderHook(() => useWebSocket(options))
-    await server.connected;
-
-
-    server.send('Hello all');
-})
-
-test('shared=false websocket can re-connect after timeout', async () => {
+test('Websocket can reconnect after timeout', async () => {
     options.heartbeat = {
         message: 'ping',
         returnMessage: 'pong',
         timeout: 100,
         interval: 30,
     };
-    options.share = false;
     options.reconnectInterval = 10;
     options.reconnectAttempts = 10;
     options.shouldReconnect = () => true;
@@ -272,69 +239,6 @@ test('shared=false websocket can re-connect after timeout', async () => {
     server.send('pong');
     expect(component1.current.getWebSocket()?.readyState).toBe(WebSocket.OPEN);
 });
-
-test('shared=true websocket can re-connect after timeout', async () => {
-    options.heartbeat = {
-        message: 'ping',
-        returnMessage: 'pong',
-        timeout: 100,
-        interval: 10,
-    };
-    options.share = true;
-    options.reconnectInterval = 10;
-    options.reconnectAttempts = 10;
-    options.shouldReconnect = () => true;
-
-    const {
-        result: component1,
-    } = renderHook(() => useWebSocket(options))
-
-    await server.connected;
-    expect(component1.current.getWebSocket()?.readyState).toBe(WebSocket.OPEN);
-
-    await sleep(200);
-
-    await server.connected;
-    server.send('pong');
-    expect(component1.current.getWebSocket()?.readyState).toBe(WebSocket.OPEN);
-});
-
-test('shared websockets each have callbacks invoked as if unshared', async () => {
-    const component1OnClose = vi.fn(() => { });
-    renderHook(() => useWebSocket({
-        ...options,
-        onClose: component1OnClose,
-    }));
-
-    await server.connected;
-
-    const component2OnClose = vi.fn(() => { });
-    renderHook(() => useWebSocket({
-        ...options,
-        onClose: component2OnClose,
-    }));
-
-    await server.connected;
-
-    const component3OnClose = vi.fn(() => { });
-    renderHook(() => useWebSocket({
-        ...options,
-        onClose: component3OnClose,
-    }));
-
-    await server.connected;
-
-    expect(component1OnClose).not.toHaveBeenCalled();
-    expect(component2OnClose).not.toHaveBeenCalled();
-    expect(component3OnClose).not.toHaveBeenCalled();
-
-    server.close();
-    await sleep(500);
-
-    expect(component1OnClose).toHaveBeenCalledTimes(1);
-    expect(component2OnClose).toHaveBeenCalledTimes(1);
-    expect(component3OnClose).toHaveBeenCalledTimes(1);
-})
 
 test('Options#queryParams append object-based params as string to url', async () => {
     options.queryParams = { type: 'user', id: 5 };
@@ -364,22 +268,7 @@ test('Options#protocols pass the value on to the instantiated WebSocket', async 
     });
 });
 
-test('Options#share subscribes multiple components to a single WebSocket, so long as the URL is the same', async () => {
-    options.share = true;
-
-    const onConnectionFn = vi.fn();
-    server.on('connection', onConnectionFn);
-
-    renderHook(() => useWebSocket(options));
-    renderHook(() => useWebSocket(options));
-    renderHook(() => useWebSocket(options));
-
-    await sleep(500);
-
-    expect(onConnectionFn).toHaveBeenCalledTimes(1);
-});
-
-test('if Options#share is not true, multiple websockets will be opened for the same url', async () => {
+test('Multiple websockets will be opened for the same url', async () => {
     const onConnectionFn = vi.fn();
     server.on('connection', onConnectionFn);
 
@@ -509,60 +398,41 @@ test('Options#retryOnError controls whether a websocket should attempt to reconn
     expect(onReconnectStopFn2).toHaveBeenCalled();
 });
 
-test.each([false, true])('Options#heartbeat, if provided, sends a message to the server at the specified interval and works when share is %s', async (shareOption) => {
+test('Options#heartbeat, if provided, sends a message to the server at the specified interval', async () => {
     options.heartbeat = {
         message: 'ping',
         timeout: 10000,
         interval: 500,
     };
-    options.share = shareOption;
-
     renderHook(() => useWebSocket(options));
 
-    if (shareOption) {
-        renderHook(() => useWebSocket(options));
-    }
     await server.connected;
     await sleep(1600);
     await expect(server).toHaveReceivedMessages(["ping", "ping", "ping"]);
 });
 
-test.each([false, true])('Options#heartbeat, if provided, close websocket if no message is received from server within specified timeout and works when share is %s', async (shareOption) => {
+test('Options#heartbeat, if provided, close websocket if no message is received from server within specified timeout', async () => {
     options.heartbeat = {
         message: 'ping',
         timeout: 1000,
         interval: 400,
     };
-    options.share = shareOption;
+    const { result } = renderHook(() => useWebSocket(options));
 
-    const {
-        result,
-    } = renderHook(() => useWebSocket(options));
-
-    if (shareOption) {
-        renderHook(() => useWebSocket(options));
-    }
     await server.connected;
     await sleep(1600);
     expect(server.messages).toEqual(['ping', 'ping'])
     expect(result.current.readyState).toBe(WebSocket.CLOSED);
 });
 
-test.each([false, true])('Options#heartbeat, if provided, do not close websocket if a message is received from server within specified timeout and works when share is %s', async (shareOption) => {
+test('Options#heartbeat, if provided, do not close websocket if a message is received from server within specified timeout', async () => {
     options.heartbeat = {
         message: 'ping',
         timeout: 1000,
         interval: 500,
     };
-    options.share = shareOption;
 
-    const {
-        result,
-    } = renderHook(() => useWebSocket(options));
-
-    if (shareOption) {
-        renderHook(() => useWebSocket(options));
-    }
+    const { result } = renderHook(() => useWebSocket(options));
 
     await server.connected;
     server.send('ping')
@@ -576,37 +446,30 @@ test.each([false, true])('Options#heartbeat, if provided, do not close websocket
     expect(result.current.readyState).toBe(WebSocket.OPEN);
 });
 
-test.each([false, true])('Options#heartbeat, can handle case when interval is very close to timeout', async (shareOption) => {
-        options.heartbeat = {
-            message: "ping",
-            returnMessage: "pong",
-            timeout: 1000,
-            interval: 800,
-        };
-        options.share = shareOption;
+test('Options#heartbeat, can handle case when interval is very close to timeout', async () => {
+    options.heartbeat = {
+        message: "ping",
+        returnMessage: "pong",
+        timeout: 1000,
+        interval: 800,
+    };
 
-        const { result } = renderHook(() => useWebSocket(options));
+    const { result } = renderHook(() => useWebSocket(options));
 
-        if (shareOption) {
-            renderHook(() => useWebSocket(options));
-        }
+    await server.connected;
+    await sleep(50);
+    expect(result.current.readyState).toEqual(ReadyState.OPEN);
 
-        await server.connected;
-        await sleep(50);
-        expect(result.current.readyState).toEqual(ReadyState.OPEN);
+    result.current.sendMessage("token");
+    await sleep(50);
+    expect(server).toHaveReceivedMessages(["token"]);
 
-        result.current.sendMessage("token");
-        await sleep(50);
-        expect(server).toHaveReceivedMessages(["token"]);
+    server.send("authorized");
+    await sleep(50);
 
-        server.send("authorized");
-        await sleep(50);
+    await sleep(850);
+    expect(server.messages).toEqual(["token", "ping"]);
+    server.send("pong");
 
-        await sleep(850);
-        // it does not matter is it shared mode or not, in both cases only one timer is used that means only one ping message is sent for all subscribers
-        expect(server.messages).toEqual(["token", "ping"]);
-        server.send("pong");
-
-        expect(result.current.readyState).toBe(WebSocket.OPEN);
-    }
-);
+    expect(result.current.readyState).toBe(WebSocket.OPEN);
+});

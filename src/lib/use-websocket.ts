@@ -3,7 +3,6 @@ import { flushSync } from 'react-dom';
 import { ReadyState } from './constants';
 import { createOrJoinSocket } from './create-or-join';
 import { getUrl } from './get-url';
-import websocketWrapper from './proxy';
 import {
   Options,
   ReadyStateState,
@@ -21,7 +20,6 @@ export const useWebSocket = (options: Options): WebSocketHook => {
   const startRef = useRef<() => void>(() => void 0);
   const reconnectCount = useRef<number>(0);
   const messageQueue = useRef<WebSocketMessage[]>([]);
-  const webSocketProxy = useRef<WebSocket | null>(null);
   const optionsCache = useRef<Options>(options);
   optionsCache.current = options;
 
@@ -41,17 +39,9 @@ export const useWebSocket = (options: Options): WebSocketHook => {
       messageQueue.current.push(message);
     }
   }, []);
-  
+
   const getWebSocket = useCallback(() => {
-    if (optionsCache.current.share !== true) {
-      return webSocketRef.current;
-    }
-
-    if (webSocketProxy.current === null && webSocketRef.current) {
-      webSocketProxy.current = websocketWrapper(webSocketRef.current, startRef);
-    }
-
-    return webSocketProxy.current;
+    return webSocketRef.current;
   }, []);
 
   useEffect(() => {
@@ -97,7 +87,6 @@ export const useWebSocket = (options: Options): WebSocketHook => {
 
       startRef.current = () => {
         if (!expectClose) {
-          if (webSocketProxy.current) webSocketProxy.current = null;
           removeListeners?.();
           start();
         }
@@ -107,7 +96,6 @@ export const useWebSocket = (options: Options): WebSocketHook => {
       return () => {
         expectClose = true;
         createOrJoin = false;
-        if (webSocketProxy.current) webSocketProxy.current = null;
         removeListeners?.();
       };
     } else if (url === null || connect === false) {
