@@ -1,8 +1,11 @@
 {
   "compilerOptions": {
-    "outDir": "./dist/",
+    "outDir": "dist",
     "sourceMap": true,
-    "module": "ESNext",
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "esModuleInterop": true,
     "target": "ES2017",
     "skipLibCheck": true,

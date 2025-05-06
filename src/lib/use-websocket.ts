@@ -1,7 +1,7 @@
 import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
-import { DEFAULT_RECONNECT_INTERVAL_MS, ReadyState } from './constants';
-import { Options, SendMessage, WebSocketHook, WebSocketMessage, } from './types';
-import { attachListeners } from "./attach-listener";
+import { DEFAULT_RECONNECT_INTERVAL_MS, ReadyState } from './constants.ts';
+import type { Options, SendMessage, WebSocketHook, WebSocketMessage, } from './types.ts';
+import { attachListeners } from "./attach-listener.ts";
 
 export function useWebSocket(options: Options): WebSocketHook {
     const { url, connect = true } = options;

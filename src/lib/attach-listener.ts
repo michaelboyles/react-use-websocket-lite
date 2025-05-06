@@ -1,6 +1,6 @@
 import { RefObject } from 'react';
-import { DEFAULT_RECONNECT_INTERVAL_MS, ReadyState } from './constants';
-import { Options } from './types';
+import { DEFAULT_RECONNECT_INTERVAL_MS, ReadyState } from './constants.ts';
+import type { Options } from './types.ts';
 
 export function attachListeners(
     websocket: WebSocket,

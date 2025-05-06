@@ -1,4 +1,4 @@
-import { ReadyState } from './constants';
+import { ReadyState } from './constants.ts';
 
 export type Options = {
     // The URL which will passed as the 1st argument of WebSocket's constructor
