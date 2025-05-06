@@ -9,8 +9,8 @@ export function useWebSocket(options: Options): WebSocketHook {
     const [urlToReadyState, setUrlToReadyState] = useState<Record<string, ReadyState>>({});
     const activeUrl = useRef<string | null>(null);
     const webSocketRef = useRef<WebSocket | null>(null);
-    const startRef = useRef<() => void>(() => void 0);
-    const reconnectCount = useRef<number>(0);
+    const startRef = useRef<() => void>(() => {});
+    const reconnectCount = useRef(0);
     const messageQueue = useRef<WebSocketMessage[]>([]);
     const activeOptions = useRef<Options>(options);
     activeOptions.current = options;
