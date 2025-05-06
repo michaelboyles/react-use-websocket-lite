@@ -1,5 +1,4 @@
 import { MutableRefObject, useCallback, useEffect, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
 import { DEFAULT_RECONNECT_INTERVAL_MS, ReadyState } from './constants';
 import { Options, ReadyStateState, SendMessage, WebSocketHook, WebSocketMessage, } from './types';
 import { attachListeners } from "./attach-listener";
@@ -50,22 +49,22 @@ export function useWebSocket(options: Options): WebSocketHook {
                 if (activeUrl.current === null) {
                     console.error('Failed to get a valid URL. WebSocket connection aborted.');
                     activeUrl.current = 'ABORTED';
-                    flushSync(() => setReadyState(prev => ({
+                    setReadyState(prev => ({
                         ...prev,
                         ABORTED: ReadyState.CLOSED,
-                    })));
+                    }));
 
                     return;
                 }
 
                 const protectedSetReadyState = (state: ReadyState) => {
                     if (expectOpen) {
-                        flushSync(() => setReadyState(prev => {
+                        setReadyState(prev => {
                             if (activeUrl.current && prev[activeUrl.current] !== state) {
                                 return {...prev, [activeUrl.current]: state};
                             }
                             return prev;
-                        }));
+                        });
                     }
                 };
 
