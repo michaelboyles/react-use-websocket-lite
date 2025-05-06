@@ -2,20 +2,14 @@
   "compilerOptions": {
     "outDir": "./dist/",
     "sourceMap": true,
-    "module": "commonjs",
+    "module": "ESNext",
     "esModuleInterop": true,
     "target": "ES2017",
-    "jsx": "react",
     "skipLibCheck": true,
     "lib": ["es2017", "dom"],
     "strict": true,
     "declaration": true,
     "baseUrl": ".",
-    "paths": {
-      "@lib/*": [
-        "src/lib/*"
-      ]
-    }
   },
   "files": [
     "./src/index.ts"
