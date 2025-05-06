@@ -135,20 +135,20 @@ async function getUrl(
         return await url();
     }
     catch (e) {
-        if (optionsRef.current.retryOnError) {
-            const maxReconnectAttempts = optionsRef.current.maxReconnectAttempts;
-            if (!maxReconnectAttempts || retriedAttempts < maxReconnectAttempts) {
-                const nextReconnectInterval = typeof optionsRef.current.reconnectInterval === 'function' ?
-                    optionsRef.current.reconnectInterval(retriedAttempts) :
-                    optionsRef.current.reconnectInterval;
+        if (!optionsRef.current.retryOnError) {
+            return null;
+        }
+        const maxReconnectAttempts = optionsRef.current.maxReconnectAttempts;
+        if (!maxReconnectAttempts || retriedAttempts < maxReconnectAttempts) {
+            const nextReconnectInterval = typeof optionsRef.current.reconnectInterval === 'function' ?
+                optionsRef.current.reconnectInterval(retriedAttempts) :
+                optionsRef.current.reconnectInterval;
 
-                await waitFor(nextReconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS);
-                return getUrl(url, optionsRef, retriedAttempts + 1);
-            }
-            else {
-                optionsRef.current.onReconnectStop?.(retriedAttempts);
-                return null;
-            }
+            await waitFor(nextReconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS);
+            return getUrl(url, optionsRef, retriedAttempts + 1);
+        }
+        else {
+            optionsRef.current.onReconnectStop?.(retriedAttempts);
         }
     }
     return null;
