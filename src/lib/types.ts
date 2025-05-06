@@ -52,10 +52,6 @@ export type HeartbeatOptions = {
     interval: number;
 }
 
-export type ReadyStateState = {
-    [url: string]: ReadyState,
-}
-
 export type WebSocketMessage = string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView;
 
 export type SendMessage = (message: WebSocketMessage, queueable?: boolean) => void;

@@ -1,12 +1,12 @@
 import { MutableRefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { DEFAULT_RECONNECT_INTERVAL_MS, ReadyState } from './constants';
-import { Options, ReadyStateState, SendMessage, WebSocketHook, WebSocketMessage, } from './types';
+import { Options, SendMessage, WebSocketHook, WebSocketMessage, } from './types';
 import { attachListeners } from "./attach-listener";
 
 export function useWebSocket(options: Options): WebSocketHook {
     const { url, connect = true } = options;
 
-    const [readyState, setReadyState] = useState<ReadyStateState>({});
+    const [urlToReadyState, setUrlToReadyState] = useState<Record<string, ReadyState>>({});
     const activeUrl = useRef<string | null>(null);
     const webSocketRef = useRef<WebSocket | null>(null);
     const startRef = useRef<() => void>(() => void 0);
@@ -16,8 +16,8 @@ export function useWebSocket(options: Options): WebSocketHook {
     activeOptions.current = options;
 
     const readyStateFromUrl: ReadyState = function () {
-        if (activeUrl.current && readyState[activeUrl.current] !== undefined) {
-            return readyState[activeUrl.current];
+        if (activeUrl.current && urlToReadyState[activeUrl.current] !== undefined) {
+            return urlToReadyState[activeUrl.current];
         }
         if (url != null && connect) {
             return ReadyState.CONNECTING;
@@ -49,7 +49,7 @@ export function useWebSocket(options: Options): WebSocketHook {
                 if (activeUrl.current === null) {
                     console.error('Failed to get a valid URL. WebSocket connection aborted.');
                     activeUrl.current = 'ABORTED';
-                    setReadyState(prev => ({
+                    setUrlToReadyState(prev => ({
                         ...prev,
                         ABORTED: ReadyState.CLOSED,
                     }));
@@ -59,7 +59,7 @@ export function useWebSocket(options: Options): WebSocketHook {
 
                 const protectedSetReadyState = (state: ReadyState) => {
                     if (expectOpen) {
-                        setReadyState(prev => {
+                        setUrlToReadyState(prev => {
                             if (activeUrl.current && prev[activeUrl.current] !== state) {
                                 return {...prev, [activeUrl.current]: state};
                             }
@@ -100,7 +100,7 @@ export function useWebSocket(options: Options): WebSocketHook {
         }
         else if (url == null || !connect) {
             reconnectCount.current = 0;
-            setReadyState(prev => {
+            setUrlToReadyState(prev => {
                 if (activeUrl.current && prev[activeUrl.current] !== ReadyState.CLOSED) {
                     return {...prev, [activeUrl.current]: ReadyState.CLOSED}
                 }
