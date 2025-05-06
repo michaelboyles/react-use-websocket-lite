@@ -20,7 +20,7 @@ export function useWebSocket(options: Options): WebSocketHook {
         if (activeUrl.current && readyState[activeUrl.current] !== undefined) {
             return readyState[activeUrl.current];
         }
-        if (url !== null && connect) {
+        if (url != null && connect) {
             return ReadyState.CONNECTING;
         }
         return ReadyState.UNINSTANTIATED;
@@ -40,7 +40,7 @@ export function useWebSocket(options: Options): WebSocketHook {
     }, []);
 
     useEffect(() => {
-        if (url !== null && connect === true) {
+        if (url != null && connect) {
             let removeListeners: () => void;
             let expectClose = false;
             let createOrJoin = true;
@@ -101,8 +101,8 @@ export function useWebSocket(options: Options): WebSocketHook {
                 removeListeners?.();
             };
         }
-        else if (url === null || connect === false) {
-            reconnectCount.current = 0; // reset reconnection attempts
+        else if (url == null || !connect) {
+            reconnectCount.current = 0;
             setReadyState(prev => {
                 if (activeUrl.current && prev[activeUrl.current] !== ReadyState.CLOSED) {
                     return {...prev, [activeUrl.current]: ReadyState.CLOSED}
@@ -125,7 +125,7 @@ export function useWebSocket(options: Options): WebSocketHook {
         readyState: readyStateFromUrl,
         getWebSocket,
     };
-};
+}
 
 async function getUrl(
     url: string | (() => string | Promise<string>),
