@@ -11,7 +11,7 @@ export function attachListeners(
 ): () => void {
     let didOpen = false;
     let messageTimeoutMonitor: MessageTimeoutMonitor | undefined;
-    let reconnectTimeout: number | undefined;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
 
     websocket.addEventListener("message", message => {
         messageTimeoutMonitor?.markMessageReceived();
@@ -53,7 +53,7 @@ export function attachListeners(
 
     return () => {
         if (reconnectTimeout !== undefined) {
-            window.clearTimeout(reconnectTimeout);
+            clearTimeout(reconnectTimeout);
             reconnectTimeout = undefined;
         }
         if (didOpen) {
@@ -75,7 +75,7 @@ function reconnectIfBelowAttemptLimit(
             optionsRef.current.reconnectInterval(reconnectCount.current) :
             optionsRef.current.reconnectInterval;
 
-        return window.setTimeout(() => {
+        return setTimeout(() => {
             reconnectCount.current++;
             reconnect();
         }, nextReconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS);
@@ -87,7 +87,7 @@ function reconnectIfBelowAttemptLimit(
 }
 
 function startHeartbeats(ws: WebSocket, options: RefObject<Options>) {
-    let timeout: number | undefined;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
 
     function scheduleNextHeartbeat() {
         const interval = options.current?.heartbeat?.interval;

@@ -154,5 +154,5 @@ async function getUrl(
 }
 
 function waitFor(duration: number) {
-    return new Promise(resolve => window.setTimeout(resolve, duration));
+    return new Promise(resolve => setTimeout(resolve, duration));
 }
