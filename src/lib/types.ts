@@ -1,6 +1,6 @@
 import { ReadyState } from './constants';
 
-export interface Options {
+export type Options = {
     // The URL which will passed as the 1st argument of WebSocket's constructor
     // See https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#url
     url: string | (() => string | Promise<string>) | null

@@ -1,4 +1,4 @@
-import { MutableRefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { DEFAULT_RECONNECT_INTERVAL_MS, ReadyState } from './constants';
 import { Options, SendMessage, WebSocketHook, WebSocketMessage, } from './types';
 import { attachListeners } from "./attach-listener";
@@ -126,7 +126,7 @@ export function useWebSocket(options: Options): WebSocketHook {
 
 async function getUrl(
     url: string | (() => string | Promise<string>),
-    optionsRef: MutableRefObject<Options>,
+    optionsRef: RefObject<Options>,
     retriedAttempts: number = 0,
 ): Promise<string | null> {
     if (typeof url === "string") return url;

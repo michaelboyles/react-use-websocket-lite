@@ -1,13 +1,13 @@
-import { MutableRefObject, RefObject } from 'react';
+import { RefObject } from 'react';
 import { DEFAULT_RECONNECT_INTERVAL_MS, ReadyState } from './constants';
 import { Options } from './types';
 
 export function attachListeners(
     websocket: WebSocket,
     setReadyState: (readyState: ReadyState) => void,
-    optionsRef: MutableRefObject<Options>,
+    optionsRef: RefObject<Options>,
     reconnect: () => void,
-    reconnectCount: MutableRefObject<number>,
+    reconnectCount: RefObject<number>,
 ): () => void {
     let didOpen = false;
     let messageTimeoutMonitor: MessageTimeoutMonitor | undefined;
@@ -64,8 +64,8 @@ export function attachListeners(
 }
 
 function reconnectIfBelowAttemptLimit(
-    optionsRef: MutableRefObject<Options>,
-    reconnectCount: MutableRefObject<number>,
+    optionsRef: RefObject<Options>,
+    reconnectCount: RefObject<number>,
     reconnect: () => void
 ) {
     const maxReconnectAttempts = optionsRef.current.maxReconnectAttempts;
