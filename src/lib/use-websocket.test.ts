@@ -366,16 +366,19 @@ test('Options#messageTimeout, if provided, do not close websocket if a message i
     expect(result.current.readyState).toBe(WebSocket.OPEN);
 });
 
-test('Connecting and reconnecting to invalid server will not produce Closing state', async () => {
+test('Connecting and reconnecting to invalid server will not produce Closed or Closing state', async () => {
     const readyStates: ReadyState[] = []
-    renderHook(() => {
+    const { result } = renderHook(() => {
         const ws = useWebSocket({
             url: "ws://example.invalid",
             shouldReconnect: () => true,
             reconnectInterval: 20
         });
         readyStates.push(ws.readyState);
+        return ws;
     });
     await sleep(100);
+    expect(readyStates).not.toContain(ReadyState.CLOSED);
     expect(readyStates).not.toContain(ReadyState.CLOSING);
+    expect(result.current?.readyState).toEqual(ReadyState.CONNECTING);
 });

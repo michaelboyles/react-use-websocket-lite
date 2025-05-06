@@ -28,9 +28,14 @@ export function attachListeners(
     });
 
     websocket.addEventListener("close", event => {
-        setReadyState(ReadyState.CLOSED);
         if (reconnectTimeout === undefined && optionsRef.current.shouldReconnect?.(event)) {
             reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
+        }
+        if (reconnectTimeout) {
+            setReadyState(ReadyState.CONNECTING)
+        }
+        else {
+            setReadyState(ReadyState.CLOSED);
         }
         messageTimeoutMonitor?.stop();
         optionsRef.current.onClose?.(event);
