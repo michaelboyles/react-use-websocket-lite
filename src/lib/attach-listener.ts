@@ -3,7 +3,7 @@ import { DEFAULT_RECONNECT_INTERVAL_MS, ReadyState } from './constants';
 import { Options } from './types';
 
 export function attachListeners(
-    webSocketInstance: WebSocket,
+    websocket: WebSocket,
     setReadyState: (readyState: ReadyState) => void,
     optionsRef: MutableRefObject<Options>,
     reconnect: () => void,
@@ -13,35 +13,35 @@ export function attachListeners(
     let messageTimeoutMonitor: MessageTimeoutMonitor | undefined;
     let reconnectTimeout: number | undefined;
 
-    webSocketInstance.onmessage = message => {
+    websocket.addEventListener("message", message => {
         messageTimeoutMonitor?.markMessageReceived();
         optionsRef.current.onMessage?.(message);
-    };
+    });
 
-    webSocketInstance.onopen = event => {
+    websocket.addEventListener("open", event => {
         didOpen = true;
         reconnectCount.current = 0;
         setReadyState(ReadyState.OPEN);
-        messageTimeoutMonitor = startMessageTimeoutMonitor(webSocketInstance, optionsRef);
-        startHeartbeats(webSocketInstance, optionsRef);
+        messageTimeoutMonitor = startMessageTimeoutMonitor(websocket, optionsRef);
+        startHeartbeats(websocket, optionsRef);
         optionsRef.current.onOpen?.(event);
-    };
+    });
 
-    webSocketInstance.onclose = event => {
+    websocket.addEventListener("close", event => {
         setReadyState(ReadyState.CLOSED);
         if (reconnectTimeout === undefined && optionsRef.current.shouldReconnect?.(event)) {
             reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
         }
         messageTimeoutMonitor?.stop();
         optionsRef.current.onClose?.(event);
-    };
+    });
 
-    webSocketInstance.onerror = error => {
+    websocket.addEventListener("error", error => {
         if (reconnectTimeout === undefined && optionsRef.current.retryOnError) {
             reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
         }
         optionsRef.current.onError?.(error);
-    };
+    });
 
     return () => {
         if (reconnectTimeout !== undefined) {
@@ -50,7 +50,7 @@ export function attachListeners(
         }
         if (didOpen) {
             setReadyState(ReadyState.CLOSING);
-            webSocketInstance.close();
+            websocket.close();
         }
     };
 }
