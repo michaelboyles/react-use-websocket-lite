@@ -29,6 +29,6 @@ jobs:
         name: set package.json version
         run: npm version from-git --git-tag-version=false
       - if: github.ref_type == 'tag'
-        run: npm publish --provenance
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
