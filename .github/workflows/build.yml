@@ -8,6 +8,9 @@ on:
     branches: [ develop ]
     tags: [ 'v*.*.*' ]
 
+permissions:
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,3 +23,10 @@ jobs:
       - run: npm ci
       - run: npm run test
       - run: npm run build
+      - if: github.ref_type == 'tag'
+        name: set package.json version
+        run: npm version from-git --git-tag-version=false
+      - if: github.ref_type == 'tag'
+        run: npm publish --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
