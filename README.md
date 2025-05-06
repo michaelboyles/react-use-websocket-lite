@@ -1,3 +1,7 @@
+[![Build status](https://github.com/michaelboyles/react-use-websocket-lite/actions/workflows/build.yml/badge.svg)](https://github.com/michaelboyles/react-use-websocket-lite/actions/workflows/build.yml)
+[![Release version](https://img.shields.io/github/v/release/michaelboyles/react-use-websocket-lite?sort=semver)](https://github.com/michaelboyles/react-use-websocket-lite/releases)
+[![MIT license](https://img.shields.io/github/license/michaelboyles/react-use-websocket-lite)](https://github.com/michaelboyles/react-use-websocket-lite/blob/develop/LICENSE)
+
 This library is a fork of [`react-use-websocket`](https://github.com/robtaussig/react-use-websocket)
 which has been stripped down to remove features that most people don't need. Mainly: SocketIO and EventSource support,
 and connection sharing. See the [changelog](https://github.com/michaelboyles/react-use-websocket-lite/#changelog).
