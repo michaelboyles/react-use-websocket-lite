@@ -18,28 +18,27 @@ export function attachListeners(
     };
 
     webSocketInstance.onopen = event => {
-        optionsRef.current.onOpen?.(event);
         reconnectCount.current = 0;
         setReadyState(ReadyState.OPEN);
         messageTimeoutMonitor = startMessageTimeoutMonitor(webSocketInstance, optionsRef);
         startHeartbeats(webSocketInstance, optionsRef);
+        optionsRef.current.onOpen?.(event);
     };
 
     webSocketInstance.onclose = event => {
-        optionsRef.current.onClose?.(event);
         setReadyState(ReadyState.CLOSED);
         if (reconnectTimeout === undefined && optionsRef.current.shouldReconnect?.(event)) {
             reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
         }
         messageTimeoutMonitor?.stop();
+        optionsRef.current.onClose?.(event);
     };
 
     webSocketInstance.onerror = error => {
-        optionsRef.current.onError?.(error);
-
         if (reconnectTimeout === undefined && optionsRef.current.retryOnError) {
             reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
         }
+        optionsRef.current.onError?.(error);
     };
 
     return () => {
