@@ -9,6 +9,7 @@ export function attachListeners(
     reconnect: () => void,
     reconnectCount: MutableRefObject<number>,
 ): () => void {
+    let didOpen = false;
     let messageTimeoutMonitor: MessageTimeoutMonitor | undefined;
     let reconnectTimeout: number | undefined;
 
@@ -18,6 +19,7 @@ export function attachListeners(
     };
 
     webSocketInstance.onopen = event => {
+        didOpen = true;
         reconnectCount.current = 0;
         setReadyState(ReadyState.OPEN);
         messageTimeoutMonitor = startMessageTimeoutMonitor(webSocketInstance, optionsRef);
@@ -42,12 +44,14 @@ export function attachListeners(
     };
 
     return () => {
-        setReadyState(ReadyState.CLOSING);
         if (reconnectTimeout !== undefined) {
             window.clearTimeout(reconnectTimeout);
             reconnectTimeout = undefined;
         }
-        webSocketInstance.close();
+        if (didOpen) {
+            setReadyState(ReadyState.CLOSING);
+            webSocketInstance.close();
+        }
     };
 }
 
