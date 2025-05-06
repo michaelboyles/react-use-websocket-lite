@@ -28,8 +28,11 @@ export function attachListeners(
     });
 
     websocket.addEventListener("close", event => {
-        if (reconnectTimeout === undefined && optionsRef.current.shouldReconnect?.(event)) {
-            reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
+        if (reconnectTimeout === undefined) {
+            const shouldReconnect = optionsRef.current.shouldReconnect;
+            if (shouldReconnect === true || typeof shouldReconnect === "function" && shouldReconnect(event)) {
+                reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
+            }
         }
         if (reconnectTimeout) {
             setReadyState(ReadyState.CONNECTING)

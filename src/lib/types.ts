@@ -26,7 +26,7 @@ export interface Options {
     onReconnectStop?: (numAttempts: number) => void
     // Whether to attempt to reconnect after the WebSocket is closed
     // Default: false
-    shouldReconnect?: (event: WebSocketEventMap['close']) => boolean
+    shouldReconnect?: boolean | ((event: WebSocketEventMap['close']) => boolean)
     // The interval in milliseconds between reconnection attempts
     // Default: 5000 (5 seconds)
     reconnectInterval?: number | ((lastAttemptNumber: number) => number)

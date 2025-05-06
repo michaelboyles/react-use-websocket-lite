@@ -196,7 +196,7 @@ test('Websocket can reconnect after timeout', async () => {
         url: URL,
         messageTimeout: 100,
         reconnectInterval: 10,
-        shouldReconnect: () => true
+        shouldReconnect: true
     }))
 
     await server.connected;
@@ -284,7 +284,7 @@ test('Options#shouldReconnect = false will not reconnect after server disconnect
     renderHook(() => useWebSocket({
         url: URL,
         reconnectInterval: 20,
-        shouldReconnect: () => false
+        shouldReconnect: false
     }));
     await sleep(100);
     expect(onConnectionFn).toHaveBeenCalledTimes(1);
