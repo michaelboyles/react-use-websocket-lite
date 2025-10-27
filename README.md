@@ -85,7 +85,12 @@ type Options = {
     retryOnError?: boolean
     // Heartbeat behaviour. A message sent every N milli
     // Default: no heartbeats
-    heartbeat?: HeartbeatOptions
+    heartbeat?: {
+        // The message to send after every `interval`
+        message: string | (() => string);
+        // The interval between outgoing heartbeats, in milliseconds
+        interval: number;
+    }
     // The connection is closed after not receiving a message for this many milliseconds
     // Default: no timeout
     messageTimeout?: number
