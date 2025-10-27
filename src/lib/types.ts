@@ -47,7 +47,7 @@ export type Options = {
 
 export type HeartbeatOptions = {
     // The message to send after every `interval`
-    message: string | (() => string);
+    message: WebSocketMessage | (() => WebSocketMessage);
     // The interval between outgoing heartbeats, in milliseconds
     interval: number;
 }
@@ -61,4 +61,3 @@ export type WebSocketHook = {
     readyState: ReadyState,
     getWebSocket: () => (WebSocket | null),
 }
-

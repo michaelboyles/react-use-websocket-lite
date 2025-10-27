@@ -1,3 +1,11 @@
+# Unreleased
+
+Allow heartbeats to be non-strings
+
+# 1.0.1
+
+Fix broken modules in packaging
+
 # 1.0.0
 
 Changes to the object returned from `useWebSocket`

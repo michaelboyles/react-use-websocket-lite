@@ -18,7 +18,7 @@ npm install react-use-websocket-lite
 yarn add react-use-websocket-lite
 ```
 
-```ts
+```tsx
 function Demo() {
     const [messages, setMessages] = useState<string[]>([]);
 
@@ -87,7 +87,7 @@ type Options = {
     // Default: no heartbeats
     heartbeat?: {
         // The message to send after every `interval`
-        message: string | (() => string);
+        message: WebSocketMessage | (() => WebSocketMessage);
         // The interval between outgoing heartbeats, in milliseconds
         interval: number;
     }
@@ -95,5 +95,6 @@ type Options = {
     // Default: no timeout
     messageTimeout?: number
 }
-```
 
+type WebSocketMessage = string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
+```
