@@ -34,7 +34,7 @@ test('readyState changes across readyState transitions', async () => {
     expect(result.current.readyState).toEqual(ReadyState.OPEN);
 
     server.close();
-    await expect(result.current.readyState).toEqual(ReadyState.CLOSED);
+    expect(result.current.readyState).toEqual(ReadyState.CLOSED);
 })
 
 test('a function-promise based url works the same as a string-based url', async () => {

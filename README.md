@@ -19,6 +19,9 @@ yarn add react-use-websocket-lite
 ```
 
 ```tsx
+import useWebSocket, { ReadyState } from "react-use-websocket-lite";
+import { useEffect, useState } from "react";
+
 function Demo() {
     const [messages, setMessages] = useState<string[]>([]);
 
@@ -32,7 +35,7 @@ function Demo() {
     });
 
     useEffect(() => {
-        if (readyState === "open") {
+        if (readyState === ReadyState.OPEN) {
             sendMessage("hello");
         }
     }, [readyState])
