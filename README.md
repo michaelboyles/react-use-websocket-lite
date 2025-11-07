@@ -86,13 +86,14 @@ type Options = {
     // Whether to reconnect after an error event
     // Default: false
     retryOnError?: boolean
-    // Heartbeat behaviour. A message sent every N milli
+    // Heartbeat behaviour. A message sent every N milliseconds
     // Default: no heartbeats
     heartbeat?: {
-        // The message to send after every `interval`
-        message: WebSocketMessage | (() => WebSocketMessage);
+        // The message to send after every `interval`. If provided as a function, the message will be created immediately
+        // before each send, allowing dynamic properties like timestamps.
+        message: WebSocketMessage | (() => WebSocketMessage)
         // The interval between outgoing heartbeats, in milliseconds
-        interval: number;
+        interval: number
     }
     // The connection is closed after not receiving a message for this many milliseconds
     // Default: no timeout
