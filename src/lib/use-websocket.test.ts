@@ -307,6 +307,28 @@ test('Options#onReconnectStop is called when the websocket exceeds maximum recon
     expect(onReconnectStopFn.mock.calls[0][0]).toBe(3);
 });
 
+test('Options#onConnectAttempt is called when the hook attempts an initial connection or reconnection', async () => {
+    const onConnectAttemptFn = vi.fn((_attemptNum: number) => {});
+    renderHook(() => useWebSocket({
+        url: URL,
+        maxReconnectAttempts: 3,
+        reconnectInterval: 50,
+        onConnectAttempt: onConnectAttemptFn,
+        shouldReconnect: () => true,
+    }));
+    await server.connected;
+    server.close();
+
+    await expect.poll(
+        () => onConnectAttemptFn.mock.calls.length,
+        { interval: 10, timeout: 1_000 }
+    ).toBe(4);
+    expect(onConnectAttemptFn.mock.calls[0][0]).toBe(0);
+    expect(onConnectAttemptFn.mock.calls[1][0]).toBe(1);
+    expect(onConnectAttemptFn.mock.calls[2][0]).toBe(2);
+    expect(onConnectAttemptFn.mock.calls[3][0]).toBe(3);
+});
+
 test('Options#retryOnError = false will not reconnect after an error event', async () => {
     const onReconnectStopFn = vi.fn();
     renderHook(() => useWebSocket({
