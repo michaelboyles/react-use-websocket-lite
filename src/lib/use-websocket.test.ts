@@ -128,7 +128,7 @@ test('a function-promise based url stops retrying if it has exceeded reconnectAt
     expect(result.current.readyState).toEqual(ReadyState.CONNECTING);
     await sleep(100);
     expect(result.current.readyState).toEqual(ReadyState.CLOSED);
-    expect(onReconnectStop).toHaveBeenCalled();
+    expect(onReconnectStop).toHaveBeenCalledExactlyOnceWith(2);
 });
 
 test('a function-promise based url does not retry if retryOnError is false', async () => {
@@ -292,19 +292,22 @@ test('Options#shouldReconnect = false will not reconnect after server disconnect
 
 test('Options#onReconnectStop is called when the websocket exceeds maximum reconnect attempts', async () => {
     const onReconnectStopFn = vi.fn((_numAttempts: number) => {});
+    const onConnectAttemptFn = vi.fn((_attempt: number) => {});
     renderHook(() => useWebSocket({
         url: URL,
         maxReconnectAttempts: 3,
         reconnectInterval: 50,
         onReconnectStop: onReconnectStopFn,
+        onConnectAttempt: onConnectAttemptFn,
         shouldReconnect: () => true
     }));
     await server.connected;
     server.close();
     expect(onReconnectStopFn).not.toHaveBeenCalled();
+    onConnectAttemptFn.mockClear();
 
-    await expect.poll(() => onReconnectStopFn, { interval: 10, timeout: 1_000 }).toHaveBeenCalled()
-    expect(onReconnectStopFn.mock.calls[0][0]).toBe(3);
+    await expect.poll(() => onReconnectStopFn, { interval: 10, timeout: 1_000 }).toHaveBeenCalledExactlyOnceWith(3);
+    expect(onConnectAttemptFn).toHaveBeenCalledTimes(3);
 });
 
 test('Options#onConnectAttempt is called when the hook attempts an initial connection or reconnection', async () => {
@@ -318,13 +321,10 @@ test('Options#onConnectAttempt is called when the hook attempts an initial conne
     }));
     await server.connected;
     server.close();
-    expect(onConnectAttemptFn.mock.calls[0][0]).toBe(0);
+    expect(onConnectAttemptFn).toHaveBeenCalledExactlyOnceWith(0);
     onConnectAttemptFn.mockClear();
 
-    await expect.poll(
-        () => onConnectAttemptFn.mock.calls.length,
-        { interval: 10, timeout: 1_000 }
-    ).toBe(3);
+    await expect.poll(() => onConnectAttemptFn, { interval: 10, timeout: 1_000 }).toHaveBeenCalledTimes(3);
     expect(onConnectAttemptFn.mock.calls[0][0]).toBe(1);
     expect(onConnectAttemptFn.mock.calls[1][0]).toBe(2);
     expect(onConnectAttemptFn.mock.calls[2][0]).toBe(3);
@@ -355,7 +355,7 @@ test('Options#retryOnError = true will reconnect after an error event', async ()
     }));
     await server.connected;
     server.error(); // also closes the server
-    await expect.poll(() => onReconnectStop, { interval: 5, timeout: 500 }).toHaveBeenCalled();
+    await expect.poll(() => onReconnectStop, { interval: 5, timeout: 500 }).toHaveBeenCalledExactlyOnceWith(3);
 });
 
 test('Options#heartbeat, if provided, sends a message to the server at the specified interval', async () => {

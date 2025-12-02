@@ -34,7 +34,7 @@ export type Options = {
     reconnectInterval?: number | ((lastAttemptNumber: number) => number)
     // The maximum number of retries when connecting/reconnecting. Once this limit has been exceeded, the connection will
     // stop automatically trying to connect/reconnect.
-    // Default: unlimited
+    // Default: undefined (unlimited)
     maxReconnectAttempts?: number | undefined
     // Whether to reconnect after an error event
     // Default: false
