@@ -73,8 +73,8 @@ type Options = {
     onError?: (event: WebSocketEventMap['error']) => void
     // Callback invoked when giving up because `maxReconnectAttempts` was exceeded
     onReconnectStop?: (numAttempts: number) => void
-    // Callback invoked when the hook attempts to reconnect
-    onReconnectAttempt?: (attemptNum: number) => void
+    // Callback invoked when the hook attempts to connect
+    onConnectAttempt?: (attemptNum: number) => void
     // Whether to attempt to reconnect after the WebSocket is closed
     // Default: false
     shouldReconnect?: boolean | ((event: WebSocketEventMap['close']) => boolean)

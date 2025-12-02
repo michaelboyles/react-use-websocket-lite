@@ -77,7 +77,6 @@ function reconnectIfBelowAttemptLimit(
 
         return setTimeout(() => {
             reconnectCount.current++;
-            optionsRef.current.onReconnectAttempt?.(reconnectCount.current)
             reconnect();
         }, nextReconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS);
     }
