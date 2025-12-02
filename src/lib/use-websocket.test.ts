@@ -321,7 +321,7 @@ test('Options#onConnectAttempt is called when the hook attempts an initial conne
     }));
     await server.connected;
     server.close();
-    expect(onConnectAttemptFn).toHaveBeenCalledExactlyOnceWith(0);
+    expect(onConnectAttemptFn).toHaveBeenCalledExactlyOnceWith(1);
     onConnectAttemptFn.mockClear();
 
     await expect.poll(() => onConnectAttemptFn, { interval: 10, timeout: 1_000 }).toHaveBeenCalledTimes(3);
@@ -404,4 +404,25 @@ test('Connecting and reconnecting to invalid server will not produce Closed or C
     expect(readyStates).not.toContain(ReadyState.CLOSED);
     expect(readyStates).not.toContain(ReadyState.CLOSING);
     expect(result.current?.readyState).toEqual(ReadyState.CONNECTING);
+});
+
+test('If WebSocket never connects, only make Options#maxReconnectAttempts attempts', async () => {
+    server.close();
+
+    const onReconnectStopFn = vi.fn((_numAttempts: number) => {});
+    const onConnectAttemptFn = vi.fn((_attempt: number) => {});
+    renderHook(() => useWebSocket({
+        url: URL,
+        maxReconnectAttempts: 3,
+        reconnectInterval: 50,
+        onReconnectStop: onReconnectStopFn,
+        onConnectAttempt: onConnectAttemptFn,
+        shouldReconnect: () => true
+    }));
+
+    await expect.poll(() => onReconnectStopFn, { interval: 10, timeout: 1_000 }).toHaveBeenCalledExactlyOnceWith(3);
+    expect(onConnectAttemptFn).toHaveBeenCalledTimes(3);
+    expect(onConnectAttemptFn.mock.calls[0][0]).toBe(1);
+    expect(onConnectAttemptFn.mock.calls[1][0]).toBe(2);
+    expect(onConnectAttemptFn.mock.calls[2][0]).toBe(3);
 });

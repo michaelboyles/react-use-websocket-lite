@@ -69,6 +69,7 @@ export function useWebSocket(options: Options): WebSocketHook {
                 };
 
                 if (expectOpen) {
+                    reconnectCount.current++;
                     activeOptions.current.onConnectAttempt?.(reconnectCount.current);
 
                     webSocketRef.current = new WebSocket(activeUrl.current, activeOptions.current.protocols);

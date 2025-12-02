@@ -1,10 +1,12 @@
 # Unreleased
 
-Allow heartbeats to be non-strings
+- feat: `onConnectAttempt` callback
+- feat: Allow heartbeats to be non-strings
+- fix: making 1 more attempt than `maxReconnectAttempts` if never successfully connected
 
 # 1.0.1
 
-Fix broken modules in packaging
+- Fix broken modules in packaging
 
 # 1.0.0
 

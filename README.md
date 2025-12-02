@@ -4,9 +4,10 @@
 
 This library is a fork of [`react-use-websocket`](https://github.com/robtaussig/react-use-websocket)
 which has been stripped down to remove features that most people don't need. Mainly: SocketIO and EventSource support,
-and connection sharing. See the [changelog](https://github.com/michaelboyles/react-use-websocket-lite/blob/develop/CHANGELOG.md).
+and connection sharing. See the [changelog](https://github.com/michaelboyles/react-use-websocket-lite/blob/develop/CHANGELOG.md)
+for more.
 
-There are also some improvements to reduce the number of unnecessary state changes causing re-renders.
+There are also some bug fixes and some improvements to reduce the number of unnecessary state changes causing re-renders.
 
 The result is (hopefully) a library that's simpler, and easier to use in a performant way.
 
