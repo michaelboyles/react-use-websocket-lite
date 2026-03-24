@@ -10,8 +10,28 @@ export function attachListeners(
     reconnectCount: RefObject<number>,
 ): () => void {
     let didOpen = false;
+    let connectionLost = false;
     let messageTimeoutMonitor: MessageTimeoutMonitor | undefined;
+    let heartbeatMonitor: StopMonitor | undefined;
     let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    const handleConnectionLoss = () => {
+        if (connectionLost) return;
+        connectionLost = true;
+
+        heartbeatMonitor?.stop();
+        messageTimeoutMonitor?.stop();
+
+        if (reconnectTimeout === undefined && optionsRef.current.shouldReconnect === true) {
+            reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
+        }
+
+        setReadyState(reconnectTimeout ? ReadyState.CONNECTING : ReadyState.CLOSING);
+
+        if (websocket.readyState !== WebSocket.CLOSING && websocket.readyState !== WebSocket.CLOSED) {
+            websocket.close();
+        }
+    };
 
     websocket.addEventListener("message", message => {
         messageTimeoutMonitor?.markMessageReceived();
@@ -20,10 +40,11 @@ export function attachListeners(
 
     websocket.addEventListener("open", event => {
         didOpen = true;
+        connectionLost = false;
         reconnectCount.current = 0;
         setReadyState(ReadyState.OPEN);
-        messageTimeoutMonitor = startMessageTimeoutMonitor(websocket, optionsRef);
-        startHeartbeats(websocket, optionsRef);
+        messageTimeoutMonitor = startMessageTimeoutMonitor(websocket, optionsRef, handleConnectionLoss);
+        heartbeatMonitor = startHeartbeats(websocket, optionsRef);
         optionsRef.current.onOpen?.(event);
     });
 
@@ -40,6 +61,7 @@ export function attachListeners(
         else {
             setReadyState(ReadyState.CLOSED);
         }
+        heartbeatMonitor?.stop();
         messageTimeoutMonitor?.stop();
         optionsRef.current.onClose?.(event);
     });
@@ -56,7 +78,9 @@ export function attachListeners(
             clearTimeout(reconnectTimeout);
             reconnectTimeout = undefined;
         }
-        if (didOpen) {
+        heartbeatMonitor?.stop();
+        messageTimeoutMonitor?.stop();
+        if (didOpen && !connectionLost) {
             setReadyState(ReadyState.CLOSING);
             websocket.close();
         }
@@ -86,10 +110,21 @@ function reconnectIfBelowAttemptLimit(
     }
 }
 
-function startHeartbeats(ws: WebSocket, options: RefObject<Options>) {
+function startHeartbeats(
+    ws: WebSocket,
+    options: RefObject<Options>,
+): StopMonitor {
     let timeout: ReturnType<typeof setTimeout> | undefined;
+    let stopped = false;
+
+    const stop = () => {
+        stopped = true;
+        clearTimeout(timeout);
+        timeout = undefined;
+    };
 
     function scheduleNextHeartbeat() {
+        if (stopped) return;
         const interval = options.current?.heartbeat?.interval;
         if (!interval) return;
         timeout = setTimeout(() => {
@@ -104,7 +139,7 @@ function startHeartbeats(ws: WebSocket, options: RefObject<Options>) {
                     }
                 }
             }
-            catch (error) {
+            catch {
                 // do nothing
             }
             scheduleNextHeartbeat();
@@ -113,31 +148,37 @@ function startHeartbeats(ws: WebSocket, options: RefObject<Options>) {
 
     scheduleNextHeartbeat();
 
-    ws.addEventListener("close", () => {
-        clearInterval(timeout);
-    });
+    ws.addEventListener("close", stop);
+    return { stop };
 }
 
-type MessageTimeoutMonitor = {
-    markMessageReceived: () => void
+type StopMonitor = {
     stop: () => void
 }
 
-function startMessageTimeoutMonitor(websocket: WebSocket, opts: RefObject<Options>) {
+type MessageTimeoutMonitor = StopMonitor & {
+    markMessageReceived: () => void
+};
+
+function startMessageTimeoutMonitor(
+    websocket: WebSocket,
+    opts: RefObject<Options>,
+    onConnectionLost: () => void,
+): MessageTimeoutMonitor {
     function resetTimeout() {
         const nextTimeout = opts.current?.messageTimeout;
         if (!nextTimeout || nextTimeout < 0) return;
         return setTimeout(() => {
-            if (websocket.readyState !== WebSocket.CLOSED) {
+            if (websocket.readyState !== WebSocket.CLOSED && websocket.readyState !== WebSocket.CLOSING) {
                 console.log(`Closed websocket because no messages received for ${nextTimeout}ms`)
-                websocket.close();
+                onConnectionLost();
             }
         }, nextTimeout);
     }
 
     let taskId = resetTimeout();
 
-    websocket.addEventListener("close", () => clearInterval(taskId));
+    websocket.addEventListener("close", () => clearTimeout(taskId));
     return {
         markMessageReceived: () => {
             clearTimeout(taskId);
