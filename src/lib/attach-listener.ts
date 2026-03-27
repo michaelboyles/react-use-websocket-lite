@@ -11,7 +11,6 @@ export function attachListeners(
 ): () => void {
     let didOpen = false;
     let connectionLost = false;
-    let listenersAttached = true;
     let messageTimeoutMonitor: MessageTimeoutMonitor | undefined;
     let heartbeatMonitor: StopMonitor | undefined;
     let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -21,8 +20,23 @@ export function attachListeners(
         messageTimeoutMonitor?.stop();
     };
 
+    const handleClose = (event: CloseEvent) => {
+        removeEventListeners();
+        stopMonitors();
+
+        if (reconnectTimeout === undefined) {
+            const shouldReconnect = optionsRef.current.shouldReconnect;
+            if (shouldReconnect === true || typeof shouldReconnect === "function" && shouldReconnect(event)) {
+                reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
+            }
+        }
+
+        setReadyState(reconnectTimeout ? ReadyState.CONNECTING : ReadyState.CLOSED);
+        optionsRef.current.onClose?.(event);
+    };
+
     const handleConnectionLoss = () => {
-        if (!listenersAttached || connectionLost) return;
+        if (connectionLost) return;
         connectionLost = true;
 
         removeNonCloseEventListeners();
@@ -40,13 +54,11 @@ export function attachListeners(
     };
 
     const handleMessage = (message: MessageEvent) => {
-        if (!listenersAttached || connectionLost) return;
         messageTimeoutMonitor?.markMessageReceived();
         optionsRef.current.onMessage?.(message);
     };
 
     const handleOpen = (event: Event) => {
-        if (!listenersAttached) return;
         didOpen = true;
         connectionLost = false;
         reconnectCount.current = 0;
@@ -56,25 +68,7 @@ export function attachListeners(
         optionsRef.current.onOpen?.(event);
     };
 
-    const handleClose = (event: CloseEvent) => {
-        if (!listenersAttached) return;
-
-        removeEventListeners();
-        stopMonitors();
-
-        if (reconnectTimeout === undefined) {
-            const shouldReconnect = optionsRef.current.shouldReconnect;
-            if (shouldReconnect === true || typeof shouldReconnect === "function" && shouldReconnect(event)) {
-                reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
-            }
-        }
-
-        setReadyState(reconnectTimeout ? ReadyState.CONNECTING : ReadyState.CLOSED);
-        optionsRef.current.onClose?.(event);
-    };
-
     const handleError = (error: Event) => {
-        if (!listenersAttached || connectionLost) return;
         if (reconnectTimeout === undefined && optionsRef.current.retryOnError) {
             reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
         }
@@ -88,9 +82,6 @@ export function attachListeners(
     };
 
     const removeEventListeners = () => {
-        if (!listenersAttached) return;
-        listenersAttached = false;
-
         removeNonCloseEventListeners();
         websocket.removeEventListener("close", handleClose);
     };
@@ -143,16 +134,11 @@ function startHeartbeats(
 ): StopMonitor {
     let timeout: ReturnType<typeof setTimeout> | undefined;
     let stopped = false;
-    const handleClose = () => {
-        stop();
-    };
 
     const stop = () => {
-        if (stopped) return;
         stopped = true;
         clearTimeout(timeout);
         timeout = undefined;
-        ws.removeEventListener("close", handleClose);
     };
 
     function scheduleNextHeartbeat() {
@@ -179,8 +165,6 @@ function startHeartbeats(
     }
 
     scheduleNextHeartbeat();
-
-    ws.addEventListener("close", handleClose);
     return { stop };
 }
 
@@ -209,23 +193,13 @@ function startMessageTimeoutMonitor(
     }
 
     let taskId = resetTimeout();
-    let stopped = false;
-    const handleClose = () => {
-        clearTimeout(taskId);
-    };
-
-    websocket.addEventListener("close", handleClose);
     return {
         markMessageReceived: () => {
-            if (stopped) return;
             clearTimeout(taskId);
             taskId = resetTimeout();
         },
         stop: () => {
-            if (stopped) return;
-            stopped = true;
             clearTimeout(taskId);
-            websocket.removeEventListener("close", handleClose);
         }
     }
 }

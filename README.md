@@ -98,6 +98,7 @@ type Options = {
         interval: number
     }
     // The connection is closed after not receiving a message for this many milliseconds
+    // Without reconnect, readyState moves to CLOSING until the socket emits its close event
     // Default: no timeout
     messageTimeout?: number
 }
