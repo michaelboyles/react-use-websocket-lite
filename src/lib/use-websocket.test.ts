@@ -378,6 +378,18 @@ test('Options#messageTimeout, if provided, close websocket if no message is rece
         .toBe(WebSocket.CLOSED);
 });
 
+test('Options#messageTimeout, if provided, calls onClose when the timeout-triggered close completes', async () => {
+    const onCloseFn = vi.fn();
+    renderHook(() => useWebSocket({ url: URL, messageTimeout: 25, onClose: onCloseFn }));
+    await server.connected;
+
+    await expect.poll(
+        () => onCloseFn.mock.calls.length,
+        { interval: 5, timeout: 300 }
+    ).toBe(1);
+    expect(onCloseFn.mock.calls[0][0].constructor.name).toBe('CloseEvent');
+});
+
 test('Options#messageTimeout, if provided, do not close websocket if a message is received from server within specified timeout', async () => {
     const { result } = renderHook(() => useWebSocket({ url: URL, messageTimeout: 25 }));
     await server.connected;

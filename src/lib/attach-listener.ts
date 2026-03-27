@@ -11,16 +11,22 @@ export function attachListeners(
 ): () => void {
     let didOpen = false;
     let connectionLost = false;
+    let listenersAttached = true;
     let messageTimeoutMonitor: MessageTimeoutMonitor | undefined;
     let heartbeatMonitor: StopMonitor | undefined;
     let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
 
-    const handleConnectionLoss = () => {
-        if (connectionLost) return;
-        connectionLost = true;
-
+    const stopMonitors = () => {
         heartbeatMonitor?.stop();
         messageTimeoutMonitor?.stop();
+    };
+
+    const handleConnectionLoss = () => {
+        if (!listenersAttached || connectionLost) return;
+        connectionLost = true;
+
+        removeNonCloseEventListeners();
+        stopMonitors();
 
         if (reconnectTimeout === undefined && optionsRef.current.shouldReconnect === true) {
             reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
@@ -33,12 +39,14 @@ export function attachListeners(
         }
     };
 
-    websocket.addEventListener("message", message => {
+    const handleMessage = (message: MessageEvent) => {
+        if (!listenersAttached || connectionLost) return;
         messageTimeoutMonitor?.markMessageReceived();
         optionsRef.current.onMessage?.(message);
-    });
+    };
 
-    websocket.addEventListener("open", event => {
+    const handleOpen = (event: Event) => {
+        if (!listenersAttached) return;
         didOpen = true;
         connectionLost = false;
         reconnectCount.current = 0;
@@ -46,41 +54,60 @@ export function attachListeners(
         messageTimeoutMonitor = startMessageTimeoutMonitor(websocket, optionsRef, handleConnectionLoss);
         heartbeatMonitor = startHeartbeats(websocket, optionsRef);
         optionsRef.current.onOpen?.(event);
-    });
+    };
 
-    websocket.addEventListener("close", event => {
+    const handleClose = (event: CloseEvent) => {
+        if (!listenersAttached) return;
+
+        removeEventListeners();
+        stopMonitors();
+
         if (reconnectTimeout === undefined) {
             const shouldReconnect = optionsRef.current.shouldReconnect;
             if (shouldReconnect === true || typeof shouldReconnect === "function" && shouldReconnect(event)) {
                 reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
             }
         }
-        if (reconnectTimeout) {
-            setReadyState(ReadyState.CONNECTING)
-        }
-        else {
-            setReadyState(ReadyState.CLOSED);
-        }
-        heartbeatMonitor?.stop();
-        messageTimeoutMonitor?.stop();
-        optionsRef.current.onClose?.(event);
-    });
 
-    websocket.addEventListener("error", error => {
+        setReadyState(reconnectTimeout ? ReadyState.CONNECTING : ReadyState.CLOSED);
+        optionsRef.current.onClose?.(event);
+    };
+
+    const handleError = (error: Event) => {
+        if (!listenersAttached || connectionLost) return;
         if (reconnectTimeout === undefined && optionsRef.current.retryOnError) {
             reconnectTimeout = reconnectIfBelowAttemptLimit(optionsRef, reconnectCount, reconnect);
         }
         optionsRef.current.onError?.(error);
-    });
+    };
+
+    const removeNonCloseEventListeners = () => {
+        websocket.removeEventListener("message", handleMessage);
+        websocket.removeEventListener("open", handleOpen);
+        websocket.removeEventListener("error", handleError);
+    };
+
+    const removeEventListeners = () => {
+        if (!listenersAttached) return;
+        listenersAttached = false;
+
+        removeNonCloseEventListeners();
+        websocket.removeEventListener("close", handleClose);
+    };
+
+    websocket.addEventListener("message", handleMessage);
+    websocket.addEventListener("open", handleOpen);
+    websocket.addEventListener("close", handleClose);
+    websocket.addEventListener("error", handleError);
 
     return () => {
         if (reconnectTimeout !== undefined) {
             clearTimeout(reconnectTimeout);
             reconnectTimeout = undefined;
         }
-        heartbeatMonitor?.stop();
-        messageTimeoutMonitor?.stop();
-        if (didOpen && !connectionLost) {
+        removeEventListeners();
+        stopMonitors();
+        if (didOpen && websocket.readyState === WebSocket.OPEN && !connectionLost) {
             setReadyState(ReadyState.CLOSING);
             websocket.close();
         }
@@ -116,11 +143,16 @@ function startHeartbeats(
 ): StopMonitor {
     let timeout: ReturnType<typeof setTimeout> | undefined;
     let stopped = false;
+    const handleClose = () => {
+        stop();
+    };
 
     const stop = () => {
+        if (stopped) return;
         stopped = true;
         clearTimeout(timeout);
         timeout = undefined;
+        ws.removeEventListener("close", handleClose);
     };
 
     function scheduleNextHeartbeat() {
@@ -148,7 +180,7 @@ function startHeartbeats(
 
     scheduleNextHeartbeat();
 
-    ws.addEventListener("close", stop);
+    ws.addEventListener("close", handleClose);
     return { stop };
 }
 
@@ -177,15 +209,23 @@ function startMessageTimeoutMonitor(
     }
 
     let taskId = resetTimeout();
+    let stopped = false;
+    const handleClose = () => {
+        clearTimeout(taskId);
+    };
 
-    websocket.addEventListener("close", () => clearTimeout(taskId));
+    websocket.addEventListener("close", handleClose);
     return {
         markMessageReceived: () => {
+            if (stopped) return;
             clearTimeout(taskId);
             taskId = resetTimeout();
         },
         stop: () => {
+            if (stopped) return;
+            stopped = true;
             clearTimeout(taskId);
+            websocket.removeEventListener("close", handleClose);
         }
     }
 }
