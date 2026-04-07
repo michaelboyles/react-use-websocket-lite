@@ -114,7 +114,7 @@ function startHeartbeats(ws: WebSocket, options: RefObject<Options>) {
     scheduleNextHeartbeat();
 
     ws.addEventListener("close", () => {
-        clearInterval(timeout);
+        clearTimeout(timeout);
     });
 }
 
@@ -137,7 +137,7 @@ function startMessageTimeoutMonitor(websocket: WebSocket, opts: RefObject<Option
 
     let taskId = resetTimeout();
 
-    websocket.addEventListener("close", () => clearInterval(taskId));
+    websocket.addEventListener("close", () => clearTimeout(taskId));
     return {
         markMessageReceived: () => {
             clearTimeout(taskId);
