@@ -1,4 +1,4 @@
-# Unreleased
+# 1.1.0
 
 - feat: `onConnectAttempt` callback
 - feat: Allow heartbeats to be non-strings
