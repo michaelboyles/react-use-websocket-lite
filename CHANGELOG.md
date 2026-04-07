@@ -3,6 +3,7 @@
 - feat: `onConnectAttempt` callback
 - feat: Allow heartbeats to be non-strings
 - fix: making 1 more attempt than `maxReconnectAttempts` if never successfully connected
+- fix: websocket doesn't enter 'closing' state after `messageTimeout` is exceeded
 
 # 1.0.1
 

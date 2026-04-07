@@ -23,7 +23,7 @@ export function attachListeners(
         didOpen = true;
         reconnectCount.current = 0;
         setReadyState(ReadyState.OPEN);
-        messageTimeoutMonitor = startMessageTimeoutMonitor(websocket, optionsRef);
+        messageTimeoutMonitor = startMessageTimeoutMonitor(websocket, optionsRef, setReadyState);
         heartbeatTask = startHeartbeats(websocket, optionsRef);
         optionsRef.current.onOpen?.(event);
     });
@@ -92,6 +92,7 @@ function startHeartbeats(ws: WebSocket, options: RefObject<Options>): HeartbeatT
         const interval = options.current?.heartbeat?.interval;
         if (!interval) return;
         timeout = setTimeout(() => {
+            if (ws.readyState === WebSocket.CLOSING || ws.readyState === WebSocket.CLOSED) return;
             try {
                 const message = options?.current?.heartbeat?.message;
                 if (message) {
@@ -126,13 +127,18 @@ type MessageTimeoutMonitor = {
     stop: () => void
 }
 
-function startMessageTimeoutMonitor(websocket: WebSocket, opts: RefObject<Options>) {
+function startMessageTimeoutMonitor(
+    websocket: WebSocket,
+    opts: RefObject<Options>,
+    setReadyState: (readyState: ReadyState) => void
+) {
     function resetTimeout() {
         const nextTimeout = opts.current?.messageTimeout;
         if (!nextTimeout || nextTimeout < 0) return;
         return setTimeout(() => {
-            if (websocket.readyState !== WebSocket.CLOSED) {
-                console.log(`Closed websocket because no messages received for ${nextTimeout}ms`)
+            if (websocket.readyState !== WebSocket.CLOSING && websocket.readyState !== WebSocket.CLOSED) {
+                console.log(`Closed websocket because no messages received for ${nextTimeout}ms`);
+                setReadyState(ReadyState.CLOSING);
                 websocket.close();
             }
         }, nextTimeout);
