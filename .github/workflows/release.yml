@@ -1,0 +1,29 @@
+name: Release
+
+on:
+  push:
+    tags: [ 'v*.*.*' ]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write # Required for OIDC
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org/
+      - name: Update npm
+        run: npm install -g npm@latest
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test
+      - name: set package.json version
+        run: npm version from-git --git-tag-version=false
+      - run: npm run build
+      - run: npm publish --provenance --access public
