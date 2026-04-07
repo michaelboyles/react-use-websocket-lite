@@ -136,7 +136,7 @@ async function getUrl(
     try {
         return await url();
     }
-    catch (e) {
+    catch {
         if (!optionsRef.current.retryOnError) {
             return null;
         }

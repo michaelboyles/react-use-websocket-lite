@@ -104,7 +104,7 @@ function startHeartbeats(ws: WebSocket, options: RefObject<Options>): HeartbeatT
                     }
                 }
             }
-            catch (error) {
+            catch {
                 // do nothing
             }
             scheduleNextHeartbeat();
