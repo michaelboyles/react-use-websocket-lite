@@ -11,6 +11,7 @@ export function attachListeners(
 ): () => void {
     let didOpen = false;
     let messageTimeoutMonitor: MessageTimeoutMonitor | undefined;
+    let heartbeatTask: HeartbeatTask | undefined;
     let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
 
     websocket.addEventListener("message", message => {
@@ -23,11 +24,13 @@ export function attachListeners(
         reconnectCount.current = 0;
         setReadyState(ReadyState.OPEN);
         messageTimeoutMonitor = startMessageTimeoutMonitor(websocket, optionsRef);
-        startHeartbeats(websocket, optionsRef);
+        heartbeatTask = startHeartbeats(websocket, optionsRef);
         optionsRef.current.onOpen?.(event);
     });
 
     websocket.addEventListener("close", event => {
+        messageTimeoutMonitor?.stop();
+        heartbeatTask?.stop();
         if (reconnectTimeout === undefined) {
             const shouldReconnect = optionsRef.current.shouldReconnect;
             if (shouldReconnect === true || typeof shouldReconnect === "function" && shouldReconnect(event)) {
@@ -40,7 +43,6 @@ export function attachListeners(
         else {
             setReadyState(ReadyState.CLOSED);
         }
-        messageTimeoutMonitor?.stop();
         optionsRef.current.onClose?.(event);
     });
 
@@ -83,7 +85,7 @@ function reconnectIfBelowAttemptLimit(
     }
 }
 
-function startHeartbeats(ws: WebSocket, options: RefObject<Options>) {
+function startHeartbeats(ws: WebSocket, options: RefObject<Options>): HeartbeatTask {
     let timeout: ReturnType<typeof setTimeout> | undefined;
 
     function scheduleNextHeartbeat() {
@@ -110,9 +112,13 @@ function startHeartbeats(ws: WebSocket, options: RefObject<Options>) {
 
     scheduleNextHeartbeat();
 
-    ws.addEventListener("close", () => {
-        clearTimeout(timeout);
-    });
+    return {
+        stop: () => clearTimeout(timeout)
+    }
+}
+
+type HeartbeatTask = {
+    stop: () => void
 }
 
 type MessageTimeoutMonitor = {
@@ -134,7 +140,6 @@ function startMessageTimeoutMonitor(websocket: WebSocket, opts: RefObject<Option
 
     let taskId = resetTimeout();
 
-    websocket.addEventListener("close", () => clearTimeout(taskId));
     return {
         markMessageReceived: () => {
             clearTimeout(taskId);
