@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "rootDir": "src",
     "outDir": "dist",
     "sourceMap": true,
     "module": "ES2022",
@@ -12,7 +13,6 @@
     "lib": ["es2017", "dom"],
     "strict": true,
     "declaration": true,
-    "baseUrl": ".",
   },
   "files": [
     "./src/index.ts"

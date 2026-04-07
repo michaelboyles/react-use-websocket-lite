@@ -103,5 +103,5 @@ type Options = {
     messageTimeout?: number
 }
 
-type WebSocketMessage = string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
+type WebSocketMessage = BufferSource | Blob | string
 ```
