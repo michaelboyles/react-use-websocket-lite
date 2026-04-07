@@ -18,6 +18,6 @@
     "./src/index.ts"
   ],
   "include": [
-    "src/*"
+    "src"
   ]
 }
