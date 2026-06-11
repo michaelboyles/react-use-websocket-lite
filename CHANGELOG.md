@@ -26,15 +26,15 @@ Changes to `options`
 
 - This is now the only parameter to `useWebSocket`. `url` (previous 1st parameter), and `connect` (previous optional 3rd parameter) are now part of `options` (previous 2nd parameter)
 - Removed `queryParams`. Add them to the URL yourself
-- Removed `share`. See below
-- Removed `filter`. No long relevant
+- Removed `share`. See "Shared connection functionality" removal below
+- Removed `filter`. This affected the value of `lastMessage` which was removed (see above)
 - Moved `heartbeat.timeout` to top level. Now named `messageTimeout`
     - It was always operating in an orthogonal way to heartbeating; you could have a timeout without sending heartbeats,
-      and send heartbeats without. The new name makes that clearer.
+      and send heartbeats without a message timeout. The new name makes that clearer.
 
 Improvements to state lifecycle
 
-- Socket now stays in connecting state while server is down. Previously, it changed between 'connecting' and 'closed',
+- Socket now stays in connecting state while the server is down. Previously, it changed between 'connecting' and 'closed',
   causing re-renders on every attempt
 
 Removed features
