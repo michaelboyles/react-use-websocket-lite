@@ -2,21 +2,19 @@
 [![Release version](https://img.shields.io/github/v/release/michaelboyles/react-use-websocket-lite?sort=semver)](https://github.com/michaelboyles/react-use-websocket-lite/releases)
 [![MIT license](https://img.shields.io/github/license/michaelboyles/react-use-websocket-lite)](https://github.com/michaelboyles/react-use-websocket-lite/blob/develop/LICENSE)
 
+WebSocket hook for React.
+
 This library is a fork of [`react-use-websocket`](https://github.com/robtaussig/react-use-websocket)
-which has been stripped down to remove features that most people don't need. Mainly: SocketIO and EventSource support,
-and connection sharing. See the [changelog](https://github.com/michaelboyles/react-use-websocket-lite/blob/develop/CHANGELOG.md)
-for more.
+which has been stripped down to remove features that most people don't need, to fix bugs, and to
+improve performance.
 
-There are also some bug fixes and some improvements to reduce the number of unnecessary state changes causing re-renders.
-
-The result is (hopefully) a library that's simpler, and easier to use in a performant way.
+See ["Migrating"](#migrating-from-react-use-websocket) below, or the [changelog](https://github.com/michaelboyles/react-use-websocket-lite/blob/develop/CHANGELOG.md)
+for details.
 
 ## Usage
 
 ```text
 npm install react-use-websocket-lite
-# or
-yarn add react-use-websocket-lite
 ```
 
 ```tsx
@@ -164,5 +162,54 @@ type WebSocketHook = {
     readyState: ReadyState
     /** Get the native websocket. May be null, if for example {@link Options.enabled} is false */
     getWebSocket: () => (WebSocket | null)
+}
+```
+
+## Migrating from `react-use-websocket`
+
+If you rely on SSE or SocketIO, then these are no longer supported.
+
+1. Move the options:
+
+```typescript
+// old
+const { ... } = useWebSocket(url, {
+    queryParams: { q: "search" },
+    heartbeat: { timeout: 1000, message: "ping" }
+}, connect); 
+// new
+const { ... } = useWebSocket({
+   url + `?q=search`,
+   connect,
+   messageTimeout: 1000, // previously heartbeat.timeout
+   heartbeat: { message: "ping" }
+}); 
+```
+
+2. If you *really* want `lastMessage`/`lastJsonMessage` then add a `useState` and set it yourself.
+You almost certainly shouldn't actually be doing this. Do something like
+`queryClient.setQueryData` with Tanstack Query inside `onMessage`.
+
+```typescript
+const [lastMessage, setLastMessage] = useState<string | null>(null);
+const {/*...*/} = useWebSocket({
+    url,
+    onMessage: event => {
+        if (typeof event.data === "string") setLastMessage(event.data);
+    }
+});
+```
+
+3. If you use `share: true` then move `useWebSocket` into a React context provider. Simple example:
+
+```typescript
+const WsContext = createContext<ReturnType<typeof useWebSocket> | null>(null);
+function WsProvider({ children }: { children: ReactNode }) {
+    const websocket =  useWebSocket({/* opts */});
+    return (
+        <WsContext.Provider value={websocket}>
+            { children }
+        </WsContext.Provider>
+    )
 }
 ```
