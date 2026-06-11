@@ -4,7 +4,7 @@
   "description": "React Hook for WebSocket communication",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsdown src/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -17,15 +17,15 @@
     "@vitest/coverage-v8": "^4.1.8",
     "jest-websocket-mock": "^2.5.0",
     "jsdom": "^29.1.1",
+    "tsdown": "^0.22.2",
     "typescript": "^6.0.3",
     "vitest": "^4.1.8"
   },
-  "types": "./dist/index.d.ts",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "import":  "./dist/index.js"
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
     }
   },
   "files": [
