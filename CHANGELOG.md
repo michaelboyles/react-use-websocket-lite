@@ -1,3 +1,8 @@
+# 1.1.1
+
+- docs: move to tsdoc
+- build: uses tsdown, few changes to package.json (should not cause issues)
+
 # 1.1.0
 
 - feat: `onConnectAttempt` callback
